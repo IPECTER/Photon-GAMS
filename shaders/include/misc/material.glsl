@@ -956,6 +956,31 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
+	if (material_mask > 218u && material_mask < 224u) { //Ore
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.4 * smoothstep(0.2, 0.6, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+		#ifdef HARDCODED_ORE
+		material.emission = 0.14 * ORE_BRIGHTNESS * albedo_sqrt * albedo_sqrt * (0.9 + 0.1 * isolate_hue(hsl, 15.0, 0.1)) * step(0.01, hsl.y) * step(0.00001, hsl.x) * step(0.35, hsl.z);
+		#endif
+	}
+
+	if (material_mask == 224u || material_mask == 225u) { //Diamond/Redstone Ore
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.4 * smoothstep(0.2, 0.6, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+		#ifdef HARDCODED_ORE
+		vec3 ap1 = material.albedo * rec2020_to_ap1_unlit;
+		float l = 0.5 * (min_of(ap1) + max_of(ap1));
+		float redness = ap1.r * rcp(ap1.g + ap1.b);
+		material.emission = 0.7 * ORE_BRIGHTNESS * material.albedo * step(0.40, redness * l) + 0.3 * albedo_sqrt * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 15.0, 15.0)) * step(0.10, hsl.y) * step(0.76, hsl.z);
+		#endif
+	}
+
 	if (material_mask == 203u) {
 		// End crystal
 		#ifdef HARDCODED_EMISSION

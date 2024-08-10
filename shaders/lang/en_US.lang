@@ -7,14 +7,14 @@ profile.ultra                          = §dUltra
 
 # Screens
 
-screen.world                           = World
-screen.lighting                        = Lighting
-screen.sky                             = Sky
-screen.fog                             = Fog
-screen.materials                       = Materials
-screen.water                           = Water
-screen.post                            = Post-Processing
-screen.misc                            = Misc
+screen.world                           = §a🌎§r World
+screen.lighting                        = §6☀§r Lighting
+screen.sky                             = §3☁§r Sky
+screen.fog                             = §7🌫§r Fog
+screen.materials                       = §e☼§r Materials & Reflections
+screen.water                           = §b🌊§r Water
+screen.post                            = §e▓§r Post-Processing
+screen.misc                            = §e⌛§r Misc
 screen.box                             = Box
 screen.compatibility                   = Compatibility
 screen.world_curvature                 = World Curvature Settings
@@ -266,7 +266,8 @@ option.VOXEL_VOLUME_SIZE.comment       = High performance impact, also affected 
 suffix.VOXEL_VOLUME_SIZE               = m
 option.COLORED_LIGHT_I                 = Colored Light Intensity
 option.COLOREDLIGHT_SATURATION         = Colored Light Saturation
-option.GLOWING_FLOWERS                 = Glowing Flowers
+option.GLOWING_FLOWERS                 = §e🌷§r Glowing Flowers
+option.GLOWING_ORE                     = §e⛏§r Glowing Ore
 
 suffix.shadowMapResolution             = ²
 suffix.sunPathRotation                 = °

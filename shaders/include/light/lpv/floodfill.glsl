@@ -5,7 +5,7 @@
 #include "/include/light/lpv/light_colors.glsl"
 
 bool is_emitter(uint block_id) {
-	return 32u <= block_id && block_id < 64u;
+	return 32u <= block_id && block_id < 64u || block_id > 218u && block_id < 226u;
 }
 
 bool is_translucent(uint block_id) {
@@ -27,7 +27,34 @@ float get_candle_intensity(uint level) {
 
 vec3 get_emitted_light(uint block_id) {
 	if (is_emitter(block_id)) {
+		if (32u <= block_id && block_id < 64u) {
 		return texelFetch(light_data_sampler, ivec2(int(block_id) - 32, 0), 0).rgb;
+		} else if (block_id > 218u && block_id < 226u) {
+			#ifdef GLOWING_ORE
+			if (block_id == 219) {
+		return vec3(0.85, 0.59, 0.45);
+			}
+			if (block_id == 220) {
+		return light_color[36u] / 9;
+			}
+			if (block_id == 221) {
+		return light_color[9u] / 2;
+			}
+			if (block_id == 222) {
+		return light_color[38u] / 3.5;
+			}
+			if (block_id == 223) {
+		return vec3(0.76, 0.86, 0.41);
+			}
+			if (block_id == 224) {
+		return light_color[40u] / 8;
+			}
+			if (block_id == 225) {
+		return light_color[6u] / 1.5;
+			}
+			#endif
+	}
+	return light_color[219u];
 	} else if (is_custom(block_id)) {
 		return light_color[block_id - 32u];
 	} else if (is_candle(block_id)) {
