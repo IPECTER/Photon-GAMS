@@ -25,7 +25,7 @@
 const float sss_density          = 14.0 * SSS_DENSITY;
 const float sss_scale            = 5.0  * SSS_INTENSITY;
 const float night_vision_scale   = 1.5  * NIGHT_VISION_I;
-const float metal_diffuse_amount = 0.1; // Scales diffuse lighting on metals, ideally this would be zero but purely specular metals don't play well with SSR
+float metal_diffuse_amount = 1.0 * METAL_DIFFUSE; // Scales diffuse lighting on metals, ideally this would be zero but purely specular metals don't play well with SSR
 
 float get_blocklight_falloff(float blocklight, float skylight, float ao) {
 	float falloff  = pow8(blocklight) + 0.18 * sqr(blocklight) + 0.16 * dampen(blocklight);                // Base falloff
@@ -107,7 +107,7 @@ vec3 get_diffuse_lighting(
 	// Sunlight/moonlight
 
 #ifdef SHADOW
-	vec3 diffuse = vec3(lift(max0(NoL), 0.33 * rcp(SHADING_STRENGTH)) * (1.0 - 0.5 * material.sss_amount));
+	vec3 diffuse = vec3(lift(max0(NoL), 0.33 * rcp(SHADING_STRENGTH)) * (1.0 - 0.5 * material.sss_amount)) * SHADING_STRENGTH;
 	vec3 bounced = 0.033 * (1.0 - shadows) * (1.0 - 0.1 * max0(normal.y)) * pow1d5(ao + eps) * pow4(light_levels.y) * BOUNCED_LIGHT_I;
 	#ifdef WORLD_SPACE
 	bounced *= clamp01(smoothstep(0.0, 0.1, light_dir.y));

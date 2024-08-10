@@ -32,12 +32,12 @@ vec3 get_emitted_light(uint block_id) {
 		return light_color[block_id - 32u];
 	} else if (is_candle(block_id)) {
 		if(block_id > 327) { // Uncolored Candle
-			return light_color[18u] / 8.0 * get_candle_intensity(block_id - 328u);
+			return light_color[17u] / 8.0 * get_candle_intensity(block_id - 328u);
 		}
 		block_id -= 264u;
 		uint level = uint(floor(float(block_id) / 16.0));
 		float intensity = get_candle_intensity(level);
-		return tint_color[block_id - level * 16u] * intensity;
+		return tint_color[block_id - level * 16u] * intensity / 3.0;
 	} else {
 		return vec3(0.0);
 	}
@@ -79,11 +79,11 @@ void update_lpv(writeonly image3D light_img, sampler3D light_sampler) {
 	ivec3 previous_pos = ivec3(vec3(pos) - floor(previousCameraPosition) + floor(cameraPosition));
 
 	uint block_id      = texelFetch(voxel_sampler, pos, 0).x;
-	bool transparent   = block_id == 0u || block_id >= 1024u;
+	bool transparent   = block_id == 0u || block_id >= 1024u || block_id == 50u || block_id == 44u || block_id == 45u || block_id == 49u || block_id == 36u;
 	     block_id      = block_id & 1023;
 	vec3 light_avg     = gather_light(light_sampler, previous_pos) * rcp(7.0);
 	vec3 emitted_light = get_emitted_light(block_id);
-	     emitted_light = sqr(emitted_light) * sign(emitted_light);
+	     emitted_light = sqr(pow(emitted_light, vec3(COLOREDLIGHT_SATURATION))) * (1,3 + (1-pow(COLOREDLIGHT_SATURATION, 3.0))) * sign(emitted_light);
 	vec3 tint          = sqr(get_tint(block_id, transparent));
 
 	vec3 light = emitted_light + light_avg * tint;

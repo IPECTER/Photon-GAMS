@@ -6,15 +6,21 @@
 uniform float biome_may_sandstorm;
 
 vec3 get_rain_color() {
-	return mix(0.033, 0.66, smoothstep(-0.1, 0.5, sun_dir.y)) * sunlight_color * vec3(0.49, 0.65, 1.00);
+    vec3 day_rain_color = RAIN_LIGHT_I * sunlight_color * vec3(0.8, 0.8, 0.8);
+    vec3 night_rain_color = NIGHT_RAIN_I * sunlight_color * vec3(0.1, 0.1, 0.1); // Darker nighttime rain
+    return mix(night_rain_color, day_rain_color, smoothstep(-0.1, 0.5, sun_dir.y));
 }
 
 vec3 get_snow_color() {
-	return mix(0.060, 1.60, smoothstep(-0.1, 0.5, sun_dir.y)) * sunlight_color * vec3(0.49, 0.65, 1.00);
+	vec3 day_rain_color = SNOW_LIGHT_I * sunlight_color * vec3(0.8, 0.8, 0.8);
+    vec3 night_rain_color = NIGHT_RAIN_I * sunlight_color * vec3(0.1, 0.1, 0.1); // Darker nighttime rain
+    return mix(night_rain_color, day_rain_color, smoothstep(-0.1, 0.5, sun_dir.y));
 }
 
 vec3 get_sandstorm_color() {
-	return mix(0.033, 0.66, smoothstep(-0.1, 0.5, sun_dir.y)) * sunlight_color * vec3(1.00, 0.83, 0.60);
+	vec3 day_rain_color = SANDSTORM_LIGHT_I * sunlight_color * vec3(0.8, 0.8, 0.8);
+    vec3 night_rain_color = NIGHT_RAIN_I * sunlight_color * vec3(0.1, 0.1, 0.1); // Darker nighttime rain
+    return mix(night_rain_color, day_rain_color, smoothstep(-0.1, 0.5, sun_dir.y));
 }
 
 vec3 get_weather_color() {

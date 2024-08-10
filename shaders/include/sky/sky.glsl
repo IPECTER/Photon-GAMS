@@ -91,9 +91,13 @@ vec3 draw_sun(vec3 ray_dir) { return draw_sun(ray_dir, vec3(1.0)); }
 #include "/include/light/bsdf.glsl"
 #include "/include/sky/projection.glsl"
 #include "/include/utility/geometry.glsl"
+#include "/include/sky/shooting_stars.glsl"
+#include "/include/sky/nebula.glsl"
 //#include "/include/sky/moon.glsl"
 
 const float moon_luminance = 4.0; // luminance of moon disk
+
+uniform sampler2D colortex14; // star map image
 
 /*vec3 draw_moon(vec3 ray_dir) {
 	float nu = dot(ray_dir, moon_dir);
@@ -125,6 +129,39 @@ vec4 get_clouds_and_aurora(vec3 ray_dir, vec3 clear_sky) {
 	return vec4(0.0, 0.0, 0.0, 1.0);
 #endif
 }
+
+#ifdef GALAXY_ENABLED
+vec3 draw_galaxy(vec3 ray_dir) {
+    const float galaxy_intensity = GALAXY_INTENSITY;
+
+    // Check if it's night time
+    if (sun_dir.y > -0.05) return vec3(0.0); // Return black if it's not night
+
+    mat3 rot = (sunAngle < 0.5)
+        ? mat3(shadowModelViewInverse)
+        : mat3(-shadowModelViewInverse[0].xyz, shadowModelViewInverse[1].xyz, -shadowModelViewInverse[2].xyz);
+
+    ray_dir *= rot;
+
+    // Convert ray direction to spherical coordinates
+    float phi = atan(ray_dir.y, ray_dir.x);
+    float theta = acos(ray_dir.z);
+
+    // Map spherical coordinates to UV coordinates
+    vec2 uv = vec2(phi / (2.0 * pi) + 0.5, theta / pi);
+
+    vec3 galaxy = from_srgb(texture(colortex14, uv).rgb);
+
+    // Fade in/out at twilight
+    float night_factor = smoothstep(0.0, -0.1, sun_dir.y);
+
+    return galaxy * galaxy_intensity * night_factor;
+}
+#else
+vec3 draw_galaxy(vec3 ray_dir) {
+    return vec3(0.0);
+}
+#endif
 
 vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 	vec3 sky = vec3(0.0);
@@ -166,6 +203,8 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 #endif
 #endif
 
+	sky += draw_galaxy(ray_dir);
+
 	// Sky gradient
 
 	sky *= atmosphere_transmittance(ray_dir.y, planet_radius) * (1.0 - rainStrength);
@@ -180,6 +219,13 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 	vec4 clouds = get_clouds_and_aurora(ray_dir, sky);
 	sky *= clouds.a;   // transmittance
 	sky += clouds.rgb; // scattering
+
+	// Shooting stars
+	sky = DrawShootingStars(sky, ray_dir);
+
+	// Nebula
+	sky = draw_nebula(ray_dir, sky);
+
 
 	// Fade lower part of sky into cave fog color when underground so that the sky isn't visible
 	// beyond the render distance
@@ -205,9 +251,11 @@ vec3 draw_sky(vec3 ray_dir) {
 #elif defined WORLD_END
 
 #include "/include/misc/end_lighting_fix.glsl"
+#include "/include/sky/shooting_stars.glsl"
+#include "/include/sky/nebula.glsl"
 
 const float sun_solid_angle = cone_angle_to_solid_angle(sun_angular_radius);
-const vec3 end_sun_color = vec3(1.0, 0.5, 0.25);
+const vec3 end_sun_color = vec3(END_SOLAR_FLARE_COLOR_R, END_SOLAR_FLARE_COLOR_G, END_SOLAR_FLARE_COLOR_B);
 
 vec3 draw_end_sun(vec3 ray_dir) {
 	float nu = dot(ray_dir, sun_dir);
@@ -220,23 +268,24 @@ vec3 draw_end_sun(vec3 ray_dir) {
 	vec3 limb_darkening = pow(vec3(1.0 - sqr(1.0 - center_to_edge)), 0.5 * alpha);
 	vec3 sun_disk = vec3(r < sun_angular_radius);
 
-	// Solar flare effect
+	#ifdef END_SOLAR_FLARE_ENABLED
+    // Solar flare effect
+    vec3 tangent = sun_dir.y == 11.0 ? vec3(1.0, 0.0, 0.0) : normalize(cross(vec3(1.0, 0.0, 0.0), sun_dir));
+    vec3 bitangent = normalize(cross(tangent, sun_dir));
+    mat3 rot = mat3(tangent, bitangent, sun_dir);
 
-	// Transform the coordinate space such that z is parallel to sun_dir
-	vec3 tangent = sun_dir.y == 1.0 ? vec3(1.0, 0.0, 0.0) : normalize(cross(vec3(0.0, 1.0, 0.0), sun_dir));
-	vec3 bitangent = normalize(cross(tangent, sun_dir));
-	mat3 rot = mat3(tangent, bitangent, sun_dir);
+    vec2 q = ((ray_dir - sun_dir) * rot).xy;
 
-	// Vector from ray dir to sun dir
-	vec2 q = ((ray_dir - sun_dir) * rot).xy;
+    float theta = fract(linear_step(-pi, pi, atan(q.y, q.x)) + 0.015 * frameTimeCounter - 0.33 * r);
 
-	float theta = fract(linear_step(-pi, pi, atan(q.y, q.x)) + 0.015 * frameTimeCounter - 0.33 * r);
+    float flare = texture(noisetex, vec2(theta, r - END_SOLAR_FLARE_SPEED * frameTimeCounter)).x;
+          flare = pow5(flare) * exp(END_SOLAR_FLARE_FALLOFF * (r - sun_angular_radius));
+          flare = r < sun_angular_radius ? 0.0 : flare;
 
-	float flare = texture(noisetex, vec2(theta, r - 0.025 * frameTimeCounter)).x;
-	      flare = pow5(flare) * exp(-25.0 * (r - sun_angular_radius));
-		  flare = r < sun_angular_radius ? 0.0 : flare;
-
-	return end_sun_color * rcp(sun_solid_angle) * max0(sun_disk + 0.1 * flare);
+    return end_sun_color * rcp(sun_solid_angle) * max0(sun_disk + END_SOLAR_FLARE_INTENSITY * flare);
+#else
+    return end_sun_color * rcp(sun_solid_angle) * sun_disk;
+#endif
 }
 
 vec3 draw_sky(vec3 ray_dir) {

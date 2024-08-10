@@ -69,12 +69,19 @@ screen.clouds_cumulus_congestus        = Cumulus Congestus Clouds Settings
 screen.clouds_cumulonimbus             = Cumulonimbus Clouds Settings
 screen.clouds_cirrus                   = Cirrus Clouds Settings
 screen.clouds_minecrafty               = Blocky Clouds Settings
+screen.nebula                          = Nebula
+screen.nebula_color                    = Nebula Color
+screen.nebula_color.comment            = Adjust the colors of different nebula components:      Cloud 1-4 Color: Sets the color for each cloud layer        Space Color: Determines the background color of space      These settings affect the overall appearance and mood of the nebula
+screen.shooting_stars                  = Shooting Stars
+screen.end_solar_flare                 = End Solar Flare
+screen.solar_flare_color               = Solar Flare Color
 
 screen.fog_rlh                         = Rayleigh Coefficient
 screen.fog_mie                         = Mie Coefficient
 screen.sunlight_color                  = Sunlight Color
 screen.moonlight_color                 = Moonlight Color
 screen.blocklight_color                = Blocklight Color
+screen.rain_color                      = Rain Color
 screen.sunlight_morning                = Morning
 screen.sunlight_noon                   = Noon
 screen.sunlight_evening                = Evening
@@ -121,6 +128,10 @@ option.WAVING_PLANTS                   = Waving Plants
 option.WAVING_PLANTS.comment           = Ground plants wave in the wind.\n\nTo add a block to the list of waving plants, open shaders/block.properties and add it to the relevant category (10016, 10017 or 10018)
 option.WAVING_LEAVES                   = Waving Leaves
 option.WAVING_LEAVES.comment           = Leaf blocks wave in the wind.\n\nTo add a block to the list of waving leaf blocks, open shaders/block.properties and add it to the relevant category (10019)
+option.WAVING_CLEAR_STRENGTH           = Waving Clear Strength
+option.WAVING_CLEAR_STRENGTH.comment   = Controls the strength of the waving plants in the clear weather. Higher values make the plants more pronounced.
+option.WAVING_RAIN_STRENGTH            = Waving Rain Strength
+option.WAVING_RAIN_STRENGTH.comment    = Controls the strength of the waving plants in the rain weather. Higher values make the plants more pronounced.
 option.SLANTED_RAIN                    = Slanted Rain
 option.SLANTED_RAIN.comment            = Slanted rain particles. Makes rainy weather a little more atmospheric
 option.RAIN_OPACITY                    = Rain Opacity
@@ -139,6 +150,8 @@ option.DESERT_SANDSTORM                = Desert Sandstorm
 option.DESERT_SANDSTORM.comment        = Sandstorm during rain in desert biome
 option.END_GLOW                        = End Glow
 option.END_GLOW.comment                = Wavery glowing effect in the End. Requires Volumetric Lighting
+option.END_GLOW_INTENSITY              = End Glow Intensity
+option.END_GLOW_INTENSITY.comment      = Controls the intensity of the glow in the End dimension. Higher values make the glow more pronounced.
 
 option.WORLD_CURVATURE          = World Curvature
 option.DISABLE_FRUSTUM_CULLING  = Disable Frustum Culling
@@ -243,11 +256,17 @@ option.NIGHT_VISION_R                  = Red
 option.NIGHT_VISION_G                  = Green
 option.NIGHT_VISION_B                  = Blue
 option.NIGHT_VISION_I                  = Intensity
+option.NIGHT_RAIN_I                    = Night Rain Intensity
+option.RAIN_LIGHT_I                    = Rain Intensity
+option.SNOW_LIGHT_I                    = Snow Intensity
+option.SANDSTORM_LIGHT_I               = Sandstorm Intensity
 
 option.VOXEL_VOLUME_SIZE               = Voxel Volume Size
 option.VOXEL_VOLUME_SIZE.comment       = High performance impact, also affected by shadow distance
 suffix.VOXEL_VOLUME_SIZE               = m
 option.COLORED_LIGHT_I                 = Colored Light Intensity
+option.COLOREDLIGHT_SATURATION         = Colored Light Saturation
+option.GLOWING_FLOWERS                 = Glowing Flowers
 
 suffix.shadowMapResolution             = ²
 suffix.sunPathRotation                 = °
@@ -297,25 +316,88 @@ value.MOON_TYPE.MOON_VANILLA           = Vanilla Moon
 value.MOON_TYPE.MOON_PHOTON            = Photon Moon
 value.MOON_TYPE.MOON_FANCY             = Fancy Moon
 
+# Nebula
+option.NEBULA_ENABLED                  = Nebula
+option.NEBULA_ENABLED.comment          = Enables the nebula effect
+option.NEBULA_SCALE                    = Nebula Scale
+option.NEBULA_SCALE.comment            = Controls the scale of the nebula. Higher values make the nebula appear more zoomed in.
+option.NEBULA_DENSITY                  = Nebula Density
+option.NEBULA_DENSITY.comment          = Controls the density of the nebula. Higher values make the nebula more dense.
+option.NEBULA_BRIGHTNESS               = Nebula Brightness
+option.NEBULA_BRIGHTNESS.comment       = Controls the brightness of the nebula. Higher values make the nebula more bright.
+option.NEBULA_MOVEMENT_SPEED           = Nebula Movement Speed
+option.NEBULA_MOVEMENT_SPEED.comment   = Controls the speed of the nebula movement. Higher values make the nebula move faster.
+
+
+# Nebula Colors
+option.NEBULA_COLOR1_R = Nebula Color 1 Red
+option.NEBULA_COLOR1_G = Nebula Color 1 Green
+option.NEBULA_COLOR1_B = Nebula Color 1 Blue
+
+option.NEBULA_COLOR2_R = Nebula Color 2 Red
+option.NEBULA_COLOR2_G = Nebula Color 2 Green
+option.NEBULA_COLOR2_B = Nebula Color 2 Blue
+
+option.NEBULA_COLOR3_R = Nebula Color 3 Red
+option.NEBULA_COLOR3_G = Nebula Color 3 Green
+option.NEBULA_COLOR3_B = Nebula Color 3 Blue
+
+# Galaxy
+option.GALAXY_ENABLED                       = Galaxy
+option.GALAXY_ENABLED.comment               = Enables the galaxy effect
+option.GALAXY_INTENSITY                     = Galaxy Intensity
+option.GALAXY_INTENSITY.comment             = Controls the intensity of the galaxy effect
+
+# Shooting Stars
+option.SHOOTING_STARS                        = Shooting Stars
+option.SHOOTING_STARS.comment                = Enables the shooting stars effect
+option.SHOOTING_STARS_ZOOM                   = Shooting Stars Zoom
+option.SHOOTING_STARS_ZOOM.comment           = Controls the zoom level of the shooting stars effect
+option.SHOOTING_STARS_SPEED                  = Shooting Stars Speed
+option.SHOOTING_STARS_SPEED.comment          = Adjusts the speed at which shooting stars move across the sky
+option.SHOOTING_STARS_DENSITY                = Shooting Stars Density
+option.SHOOTING_STARS_DENSITY.comment        = Determines how densely packed the shooting stars appear
+option.SHOOTING_STARS_COUNT                  = Shooting Stars Count
+option.SHOOTING_STARS_COUNT.comment          = Sets the number of shooting stars visible at any given time
+option.SHOOTING_STARS_LINE_THICKNESS         = Shooting Stars Line Thickness
+option.SHOOTING_STARS_LINE_THICKNESS.comment = Adjusts the thickness of the shooting star trails
+option.SHOOTING_STARS_TRAIL_LENGTH           = Shooting Stars Trail Length
+option.SHOOTING_STARS_TRAIL_LENGTH.comment   = Controls the length of the trails left behind by shooting stars
+option.SHOOTING_STARS_TRAIL_FADE             = Shooting Stars Trail Fade
+option.SHOOTING_STARS_TRAIL_FADE.comment     = Determines how quickly the trails of shooting stars fade away
+
+# Solar Flares
+option.END_SOLAR_FLARE_ENABLED               = End Solar Flare
+option.END_SOLAR_FLARE_ENABLED.comment       = Enables the solar flare effect in the End dimension.
+option.END_SOLAR_FLARE_INTENSITY             = Solar Flare Intensity
+option.END_SOLAR_FLARE_INTENSITY.comment     = Controls the intensity of the solar flare effect in the End dimension. Higher values make the flares more pronounced.
+option.END_SOLAR_FLARE_SPEED                 = Solar Flare Speed
+option.END_SOLAR_FLARE_SPEED.comment         = Adjusts the speed of the solar flare animation in the End dimension. Higher values make the flares move faster.
+option.END_SOLAR_FLARE_FALLOFF               = Solar Flare Falloff
+option.END_SOLAR_FLARE_FALLOFF.comment       = Determines how quickly the solar flare effect fades as it extends from the sun in the End dimension. Higher values create a sharper falloff.
+option.END_SOLAR_FLARE_COLOR_R               = Red
+option.END_SOLAR_FLARE_COLOR_G               = Green
+option.END_SOLAR_FLARE_COLOR_B               = Blue
+
 # Clouds
-option.CLOUDS_CUMULUS                       = Cumulus Clouds
-option.CLOUDS_CUMULUS.comment               = Low-altitude volumetric clouds made to resemble cumulus clouds
-option.CLOUDS_CUMULUS_PRIMARY_STEPS_H       = Primary Steps - Horizon
-option.CLOUDS_CUMULUS_PRIMARY_STEPS_Z       = Primary Steps - Zenith
-option.CLOUDS_CUMULUS_LIGHTING_STEPS        = Lighting Steps
-option.CLOUDS_CUMULUS_AMBIENT_STEPS         = Ambient Steps
-option.CLOUDS_CUMULUS_ALTITUDE              = Altitude
-suffix.CLOUDS_CUMULUS_ALTITUDE              = m
-option.CLOUDS_CUMULUS_THICKNESS             = Thickness
-option.CLOUDS_CUMULUS_DENSITY               = Density
-option.CLOUDS_CUMULUS_COVERAGE              = Coverage
-option.CLOUDS_CUMULUS_SIZE                  = Size
-option.CLOUDS_CUMULUS_DETAIL_STRENGTH       = Detail Strength
-option.CLOUDS_CUMULUS_CURL_STRENGTH         = Curl Strength
-option.CLOUDS_CUMULUS_WIND_SPEED            = Wind Speed
-suffix.CLOUDS_CUMULUS_WIND_SPEED            = m/s
-option.CLOUDS_CUMULUS_WIND_ANGLE            = Wind Angle
-suffix.CLOUDS_CUMULUS_WIND_ANGLE            = °
+option.CLOUDS_CUMULUS                        = Cumulus Clouds
+option.CLOUDS_CUMULUS.comment                = Low-altitude volumetric clouds made to resemble cumulus clouds
+option.CLOUDS_CUMULUS_PRIMARY_STEPS_H        = Primary Steps - Horizon
+option.CLOUDS_CUMULUS_PRIMARY_STEPS_Z        = Primary Steps - Zenith
+option.CLOUDS_CUMULUS_LIGHTING_STEPS         = Lighting Steps
+option.CLOUDS_CUMULUS_AMBIENT_STEPS          = Ambient Steps
+option.CLOUDS_CUMULUS_ALTITUDE               = Altitude
+suffix.CLOUDS_CUMULUS_ALTITUDE               = m
+option.CLOUDS_CUMULUS_THICKNESS              = Thickness
+option.CLOUDS_CUMULUS_DENSITY                = Density
+option.CLOUDS_CUMULUS_COVERAGE               = Coverage
+option.CLOUDS_CUMULUS_SIZE                   = Size
+option.CLOUDS_CUMULUS_DETAIL_STRENGTH        = Detail Strength
+option.CLOUDS_CUMULUS_CURL_STRENGTH          = Curl Strength
+option.CLOUDS_CUMULUS_WIND_SPEED             = Wind Speed
+suffix.CLOUDS_CUMULUS_WIND_SPEED             = m/s
+option.CLOUDS_CUMULUS_WIND_ANGLE             = Wind Angle
+suffix.CLOUDS_CUMULUS_WIND_ANGLE             = °
 
 option.CLOUDS_ALTOCUMULUS                       = Altocumulus Clouds
 option.CLOUDS_ALTOCUMULUS.comment               = Mid-altitude volumetric clouds made to resemble altocumulus clouds
@@ -605,6 +687,7 @@ option.BLOOMY_FOG.comment              = Intense bloom in fog. This gives the ap
 option.BLOOMY_FOG_INTENSITY            = Bloomy Fog Intensity
 option.BLOOMY_FOG_INTENSITY.comment    = Adjusts the intensity of "bloomy fog"
 option.NETHER_FOG_INTENSITY            = Nether Fog Intensity
+option.END_FOG_INTENSITY               = End Fog Intensity
 option.VL                              = Volumetric Lighting
 option.VL.comment                      = Adds light shafts and variable fog density
 option.VL_RENDER_SCALE                 = VL Render Scale
@@ -682,6 +765,11 @@ option.HARDCODED_SSS                   = Hardcoded SSS
 option.HARDCODED_SSS.comment           = Hardcoded subsurface scattering for some blocks (eg leaves)
 option.HARDCODED_POROSITY              = Hardcoded Porosity
 option.HARDCODED_POROSITY.comment      = Hardcoded porosity for some blocks (eg sand)
+option.HARDCODED_ORE                   = Hardcoded Ore Emission
+option.ORE_BRIGHTNESS                  = Ore Emission Intensity
+option.HARDCODED_PARTICLES             = Particles Emission
+option.PARTICLES_BRIGHTNESS            = Particles Emission Intensity
+option.METAL_DIFFUSE                   = Metals Diffuse Amount
 option.RAIN_PUDDLES                    = Rain Puddles
 option.EMISSION_STRENGTH               = Emission Strength
 option.EMISSION_STRENGTH.comment       = Adjusts the brightness of emissive objects like torches. This does not affect the brightness of the light casted, only the brightness of the light source itself. This also effects the hardcoded emissives

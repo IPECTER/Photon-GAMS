@@ -23,11 +23,11 @@ bool is_voxelized(uint block_id, bool vertex_at_grid_corner) {
 	bool is_transparent_block =
 		block_id == 1u  || // Water
 	    block_id == 18u || // Transparent metal objects
-	    block_id == 256u;  // Miscellaneous transparent
-	
-	bool is_light_emitting_block = (32u <= block_id && block_id < 96u) || (264u <= block_id && block_id < 332u) ;
+	    block_id == 202u;  // Miscellaneous transparent
 
-	return (vertex_at_grid_corner || is_light_emitting_block) && is_terrain && !is_transparent_block;
+	bool is_light_emitting_block = (32u <= block_id && block_id < 96u) || (264u <= block_id && block_id < 332u) ;
+	bool is_light_tinting_block  = 164u <= block_id && block_id < 180u;
+	return (vertex_at_grid_corner || is_light_emitting_block || is_light_tinting_block) && is_terrain && !is_transparent_block;
 }
 
 bvec3 disjunction(bvec3 a, bvec3 b) {
@@ -70,7 +70,8 @@ void update_voxel_map(uint block_id) {
 	// SSS blocks
 	if (block_id == 5u  || // Leaves
 	    block_id == 14u || // Strong SSS
-	    block_id == 15u    // Weak SSS
+	    block_id == 15u || // Weak SSS
+		block_id == 30u
 	) {
 		block_id = 179u; // light gray tint
 	}
