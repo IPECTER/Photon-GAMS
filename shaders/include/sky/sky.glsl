@@ -130,7 +130,7 @@ vec4 get_clouds_and_aurora(vec3 ray_dir, vec3 clear_sky) {
 #endif
 }
 
-#ifdef GALAXY_ENABLED
+#if defined GALAXY_ENABLED && !defined PROGRAM_DEFERRED0
 vec3 draw_galaxy(vec3 ray_dir) {
     const float galaxy_intensity = GALAXY_INTENSITY;
 
@@ -221,8 +221,9 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 	sky += clouds.rgb; // scattering
 
 	// Shooting stars
+	#if defined SHOOTING_STARS && !defined PROGRAM_DEFERRED0
 	sky = DrawShootingStars(sky, ray_dir);
-
+	#endif
 	// Nebula
 	sky = draw_nebula(ray_dir, sky);
 
