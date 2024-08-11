@@ -916,7 +916,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 
 	if (material_mask > 263u && material_mask <=332u) { // 264 - 331
 		// Colored Candles
-		material.emission = 0.45 * material.albedo * material.albedo;
+		material.emission = 0.52 * material.albedo * material.albedo;
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
 		material.roughness = sqr(1.0 - smoothness);
