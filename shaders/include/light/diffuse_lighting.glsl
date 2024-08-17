@@ -112,7 +112,7 @@ vec3 get_diffuse_lighting(
 	#ifdef WORLD_SPACE
 	bounced *= clamp01(smoothstep(0.0, 0.1, light_dir.y));
 	#endif
-	vec3 sss = sss_approx(material.albedo, material.sss_amount, material.sheen_amount, sss_depth, LoV, shadows.x);
+	vec3 sss = sss_approx(material.albedo, material.sss_amount, material.sheen_amount, mix(sss_depth, 0.0, shadow_distance_fade), LoV, shadows.x);
 
 	// Adjust SSS outside of shadow distance
 	sss *= mix(1.0, ao * (clamp01(NoL) * 0.9 + 0.1), clamp01(shadow_distance_fade));
@@ -123,17 +123,12 @@ vec3 get_diffuse_lighting(
 	diffuse *= 0.4 + 0.6 * sqr(ao);
 	#endif
 
-	#ifdef CLOUD_SHADOWS
-	bounced *= cloud_shadows;
-	sss     *= cloud_shadows;
-	#endif
-
 	#ifdef SHADOW_VPS
 	// Add SSS and diffuse
-	lighting += light_color * (diffuse * shadows + bounced + sss);
+		lighting += diffuse * shadows + bounced + sss;
 	#else
 	// Blend SSS and diffuse
-	lighting += light_color * (mix(diffuse, sss, material.sss_amount) * shadows + bounced);
+	lighting += mix(diffuse, sss, material.sss_amount) * shadows + bounced;
 	#endif
 #else
 	// Simple shading for when shadows are disabled
@@ -144,11 +139,14 @@ vec3 get_diffuse_lighting(
 	     diffuse *= 1.0 * (0.9 + 0.1 * normal.x) * (0.8 + 0.2 * abs(flat_normal.y));
 	     diffuse *= ao * pow4(light_levels.y) * (dampen(light_dir.y) * 0.5 + 0.5);
 
-	lighting += light_color * diffuse;
+	lighting += diffuse;
+#endif
+
+	lighting *= light_color;
 
 	#ifdef CLOUD_SHADOWS
 	lighting *= cloud_shadows;
-	#endif
+
 #endif
 #endif
 

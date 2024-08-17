@@ -25,7 +25,10 @@ const CloudsResult clouds_not_hit = CloudsResult(
 uniform float day_factor;
 
 float clouds_phase_single(float cos_theta) { // Single scattering phase function
-	return 0.8 * klein_nishina_phase(cos_theta, 2600.0)    // forwards lobe
+	float forwards_a = klein_nishina_phase(cos_theta, 2600.0); // this gives a nice glow very close to the sun
+	float forwards_b = henyey_greenstein_phase(cos_theta, 0.8);
+
+	return 0.8 * max(forwards_a, forwards_b)               // forwards lobe (max'ing them is completely nonsensical but it looks nice)
 	     + 0.2 * henyey_greenstein_phase(cos_theta, -0.2); // backwards lobe
 }
 
@@ -350,8 +353,9 @@ CloudsResult draw_cumulus_clouds(
 	}
 
 	// Get main light color for this layer
-	vec3 light_color  = moonlit ? moon_color : sun_color;
-	     light_color *= sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+	vec3 light_color  = sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+		 light_color  = atmosphere_post_processing(light_color);
+	     light_color *= moonlit ? moon_color : sun_color;
 		 light_color *= 1.0 - rainStrength;
 
 	// Remap the transmittance so that min_transmittance is 0
@@ -619,8 +623,9 @@ CloudsResult draw_cumulus_congestus_clouds(
 	}
 
 	// Get main light color for this layer
-	vec3 light_color  = moonlit ? moon_color : sun_color;
-	     light_color *= sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+vec3 light_color  = sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+		 light_color  = atmosphere_post_processing(light_color);
+	     light_color *= moonlit ? moon_color : sun_color;
 		 light_color *= 1.0 - rainStrength;
 
 	// Remap the transmittance so that min_transmittance is 0
@@ -945,8 +950,9 @@ CloudsResult draw_cumulonimbus_clouds(
 	}
 
 	// Get main light color for this layer
-	vec3 light_color  = moonlit ? moon_color : sun_color;
-		 light_color *= sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+	vec3 light_color  = sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
+		 light_color  = atmosphere_post_processing(light_color);
+	     light_color *= moonlit ? moon_color : sun_color;
 		 light_color *= 1.0 - rainStrength;
 
 	// Remap the transmittance so that min_transmittance is 0

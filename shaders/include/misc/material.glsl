@@ -589,6 +589,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 							#ifdef HARDCODED_EMISSION
 							// Strong golden light
 							material.emission  = 0.85 * albedo_sqrt * linear_step(0.4, 0.6, 0.2 * hsl.y + 0.55 * hsl.z);
+							light_levels.x *= 0.85;
 							#endif
 							#ifdef HARDCODED_SPECULAR
 							float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
@@ -603,6 +604,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 							#ifdef HARDCODED_EMISSION
 							// Medium golden light
 							material.emission  = 0.85 * albedo_sqrt * linear_step(0.78, 0.85, hsl.z);
+							light_levels.x *= 0.85;
 							#endif
 							#ifdef HARDCODED_SPECULAR
 							float smoothness = 0.4 * smoothstep(0.2, 0.6, hsl.z);
@@ -672,6 +674,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 							#ifdef HARDCODED_EMISSION
 							// Jack o' Lantern
 							material.emission = 0.80 * albedo_sqrt * step(0.73, 0.8 * hsl.z);
+							light_levels.x *= 0.85;
 							#endif
 							#ifdef HARDCODED_SSS
 							material.sss_amount = 0.2;
@@ -751,7 +754,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 							material.emission = 0.5 * albedo_sqrt * linear_step(0.5, 0.6, hsl.z);
 						} else { // 49
 							#ifdef HARDCODED_EMISSION
-							// Jack o' Lantern + nether mushrooms
+							// Nether mushrooms
 							material.emission = 0.80 * albedo_sqrt * step(0.73, 0.1 * hsl.y + 0.7 * hsl.z);
 							#endif
 							#ifdef HARDCODED_SSS
@@ -925,9 +928,24 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 			material.emission = vec3(1.0);
 		}
 
-	if (material_mask > 263u && material_mask <=332u) { // 264 - 331
-		// Colored Candles
-		material.emission = 0.52 * material.albedo * material.albedo;
+
+	// 			if (material_mask > 191u && material_mask < 240u || material_mask > 63u && material_mask < 80u) { // 264 - 331
+	// 	// 343
+	// 	#ifdef HARDCODED_EMISSION
+	// 	material.emission = material.albedo * isolate_hue(hsl, 0, 360);
+	// 	#endif
+	// 	#ifdef HARDCODED_SPECULAR
+	// 	float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+	// 	material.roughness = sqr(1.0 - smoothness);
+	// 	material.f0 = vec3(0.02);
+	// 	#endif
+	// }
+
+	if (material_mask == 192u || material_mask == 208u || material_mask == 64u || material_mask == 224u) { // 264 - 331
+		// Red
+		#ifdef HARDCODED_EMISSION
+		material.emission = albedo_sqrt * isolate_hue(hsl,-40.0, 65);
+		#endif
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
 		material.roughness = sqr(1.0 - smoothness);
@@ -935,7 +953,91 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 202u) {
+	if (material_mask == 193u || material_mask == 209u || material_mask == 65u || material_mask == 225u) { // 264 - 331
+		// Orange
+		#ifdef HARDCODED_EMISSION
+		material.emission = material.albedo * isolate_hue(hsl, 15.0, 50) * linear_step(0.2, 1.0, hsl.z);
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask == 194u || material_mask == 210u || material_mask == 66u || material_mask == 226u) { // 264 - 331
+		// Yellow
+		#ifdef HARDCODED_EMISSION
+		material.emission = max(material.albedo * isolate_hue(hsl, 45.0, 20), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask == 195u || material_mask == 211u || material_mask == 67u || material_mask == 227u) { // 264 - 331
+		// Brown
+		#ifdef HARDCODED_EMISSION
+		material.emission = max(material.albedo * isolate_hue(hsl, 45.0, 25), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask == 196u || material_mask == 212u || material_mask == 68u || material_mask == 228u || material_mask == 197u || material_mask == 213u || material_mask == 69u || material_mask == 229u) { // 264 - 331
+		// Green, Lime
+		#ifdef HARDCODED_EMISSION
+		material.emission = max(material.albedo * isolate_hue(hsl, 105.0, 40), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask > 197u && material_mask < 201u || material_mask > 213u && material_mask < 217u || material_mask > 69u && material_mask < 73u || material_mask > 229u && material_mask < 233u) { // 264 - 331
+		// Blue, Light blue, Cyan
+		#ifdef HARDCODED_EMISSION
+		material.emission = max(material.albedo * isolate_hue(hsl, 220.0, 70), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask > 200u && material_mask < 204u || material_mask > 216u && material_mask < 220u || material_mask > 72u && material_mask < 76u || material_mask > 232u && material_mask < 236u) { // 264 - 331
+		// Purple, Magenta, Pink
+		#ifdef HARDCODED_EMISSION
+		material.emission = material.albedo * isolate_hue(hsl, 300, 42);
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+		if (material_mask > 203u && material_mask < 208u || material_mask > 219u && material_mask < 224u || material_mask > 75u && material_mask < 80u || material_mask > 235u && material_mask < 240u) { // 264 - 331
+		// Black, White, Gray, Light gray
+		#ifdef HARDCODED_EMISSION
+		material.emission = max(material.albedo * isolate_hue(hsl, 50.0, 40), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+	if (material_mask == 181u) {
 		//Transparent blocks
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.45 * smoothstep(0.01, 0.95, hsl.z);
@@ -957,7 +1059,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 201u) {
+	if (material_mask == 180u) {
 		// Obsidian
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = linear_step(0.02, 0.4, hsl.z);
@@ -967,7 +1069,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask > 218u && material_mask < 224u) { //Ore
+	if (material_mask > 184u && material_mask < 190u) { //Ore
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.4 * smoothstep(0.2, 0.6, hsl.z);
 		material.roughness = sqr(1.0 - smoothness);
@@ -978,7 +1080,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 224u || material_mask == 225u) { //Diamond/Redstone Ore
+	if (material_mask == 190u || material_mask == 191u) { //Diamond/Redstone Ore
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.4 * smoothstep(0.2, 0.6, hsl.z);
 		material.roughness = sqr(1.0 - smoothness);
@@ -992,7 +1094,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 203u) {
+	if (material_mask == 182u) {
 		// End crystal
 		#ifdef HARDCODED_EMISSION
 		material.emission = isolate_hue(hsl, 310.0, 50.0) * 2.2 * albedo_sqrt * albedo_sqrt;
@@ -1005,7 +1107,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 216u) {
+	if (material_mask == 183u) {
 		//
 		#ifdef HARDCODED_EMISSION
 		material.emission = 0.50 * albedo_sqrt * step(0.8, 0.1 * hsl.y + 0.7 * hsl.z + 0.3 * hsl.x);
@@ -1017,7 +1119,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-	if (material_mask == 217u) {
+	if (material_mask == 184u) {
 		//
 		#ifdef HARDCODED_EMISSION
 		float blue = isolate_hue(hsl, 150.0, 60.0);

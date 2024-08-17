@@ -23,9 +23,9 @@ bool is_voxelized(uint block_id, bool vertex_at_grid_corner) {
 	bool is_transparent_block =
 		block_id == 1u  || // Water
 	    block_id == 18u || // Transparent metal objects
-	    block_id == 202u;  // Miscellaneous transparent
+	    block_id == 181u;  // Miscellaneous transparent
 
-	bool is_light_emitting_block = (32u <= block_id && block_id < 96u) || (264u <= block_id && block_id < 332u) ;
+	bool is_light_emitting_block = (32u <= block_id && block_id < 96u) || (184u <= block_id && block_id < 240u) || (264u <= block_id && block_id < 332u) ;
 	bool is_light_tinting_block  = 164u <= block_id && block_id < 180u;
 	return (vertex_at_grid_corner || is_light_emitting_block || is_light_tinting_block) && is_terrain && !is_transparent_block;
 }

@@ -186,10 +186,6 @@ vec3 shadow_pcf(
 	return shadow * color;
 }
 
-#ifdef SSRT_DISTANT_SHADOWS
-
-#else
-#endif
 
 vec3 calculate_shadows(
 	vec3 scene_pos,
@@ -220,24 +216,19 @@ vec3 calculate_shadows(
 	vec3 shadow_clip_pos = project_ortho(shadowProjection, shadow_view_pos);
 	vec3 shadow_screen_pos = distort_shadow_space(shadow_clip_pos) * 0.5 + 0.5;
 
-	distance_fade = pow32(max(
-		max_of(abs(shadow_screen_pos.xy * 2.0 - 1.0)),
-		mix(1.0, 0.55, linear_step(0.33, 0.8, light_dir.y)) * length_squared(scene_pos) * rcp(shadowDistance * shadowDistance))
+	distance_fade = pow32(
+		max(
+			max_of(abs(shadow_screen_pos.xy * 2.0 - 1.0)),
+			mix(
+				1.0, 0.55, 
+				linear_step(0.33, 0.8, light_dir.y)
+			) * length_squared(scene_pos.xz) * rcp(shadowDistance * shadowDistance)
+		)
 	);
 
-#ifdef SSRT_DISTANT_SHADOWS
-	float distant_shadow = raytrace_shadows();
-#else
+
 	float distant_shadow = lightmap_shadows(skylight, NoL);
-#endif
-
-	if (distance_fade >= 1.0) return vec3(distant_shadow * cloud_shadows);
-
-	distant_shadow = ((1.0 - distance_fade) + distance_fade * distant_shadow);
-
-#if defined WORLD_OVERWORLD 
-	distant_shadow *= cloud_shadows;
-#endif
+	if (distance_fade >= 1.0) return vec3(distant_shadow);
 
 	float dither = interleaved_gradient_noise(gl_FragCoord.xy, frameCounter);
 
@@ -248,7 +239,7 @@ vec3 calculate_shadows(
 	sss_depth = mix(blocker_search_result.y, sss_depth, distance_fade);
 
 	if (NoL < 1e-3) return vec3(0.0); // now we can exit early for SSS blocks
-	if (blocker_search_result.x < eps) return vec3(distant_shadow); // blocker search empty handed => no occluders
+	if (blocker_search_result.x < eps) return vec3((1.0 - distance_fade) + distance_fade * distant_shadow); // blocker search empty handed => no occluders
 
 #ifdef WORLD_SPACE
 	float penumbra_scale = SHADOW_PENUMBRA_SCALE * (1.0 + 2.0 * sss_amount);
@@ -272,10 +263,12 @@ vec3 calculate_shadows(
 #endif
 
 #ifdef SHADOW_PCF
-	return distant_shadow * shadow_pcf(shadow_screen_pos, shadow_clip_pos, penumbra_size, dither);
+vec3 shadow = shadow_pcf(shadow_screen_pos, shadow_clip_pos, penumbra_size, dither);
 #else
-	return distant_shadow * shadow_basic(shadow_screen_pos);
+	vec3 shadow = shadow_basic(shadow_screen_pos);
 #endif
+
+	return mix(shadow, vec3(distant_shadow), clamp01(distance_fade));
 }
 #else
 vec3 calculate_shadows(
