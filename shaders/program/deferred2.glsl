@@ -251,10 +251,9 @@ vec4 current            = texelFetch(colortex9, src_texel, 0);
 #else
 	#define previous_uv_clamped previous_uv
 #endif
-
+	
 	vec4 history = catmull_rom_filter_fast(colortex11, previous_uv_clamped * taau_render_scale, 0.5);
 	vec2 history_data = texture(colortex12, previous_uv_clamped * taau_render_scale).xy;
-	vec4 history = catmull_rom_filter(colortex11, previous_uv_clamped * taau_render_scale);
 
 	// Depth at the previous position
 	float history_depth = 1.0 - min_of(textureGather(colortex6, previous_uv_clamped, 2));

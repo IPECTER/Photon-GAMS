@@ -116,11 +116,12 @@ screen.end_light_color                 = Light Color
 screen.end_ambient_color               = Ambient Color
 screen.nether_color                    = Static Color
 
-option.INFO                            = Photon Shader
+option.INFO                            = Photon GAMS
 value.INFO.0                           = §eby SixthSurge
-value.INFO.1                           = §aby SixthSurge
-value.INFO.2                           = §bby SixthSurge
-value.INFO.3                           = §dby SixthSurge
+value.INFO.1                           = §aby SW-52
+value.INFO.2                           = §cby -Daytendo64-
+value.INFO.3                           = §bby Arona74
+value.INFO.4                           = §dby OUdefoe17
 
 # World settings
 
