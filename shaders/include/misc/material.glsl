@@ -1013,8 +1013,20 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		#endif
 	}
 
-		if (material_mask > 200u && material_mask < 204u || material_mask > 216u && material_mask < 220u || material_mask > 72u && material_mask < 76u || material_mask > 232u && material_mask < 236u) { // 264 - 331
-		// Purple, Magenta, Pink
+		if (material_mask > 200u && material_mask < 203u || material_mask > 216u && material_mask < 219u || material_mask > 72u && material_mask < 75u || material_mask > 232u && material_mask < 235u) { // 264 - 331
+		// Purple, Magenta
+		#ifdef HARDCODED_EMISSION
+		material.emission = material.albedo * material.albedo * isolate_hue(hsl, 260, 30);
+		#endif
+		#ifdef HARDCODED_SPECULAR
+		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
+		material.roughness = sqr(1.0 - smoothness);
+		material.f0 = vec3(0.02);
+		#endif
+	}
+
+			if (material_mask == 203u || material_mask == 219u || material_mask == 75u || material_mask == 235u) { // 264 - 331
+		//Pink
 		#ifdef HARDCODED_EMISSION
 		material.emission = material.albedo * isolate_hue(hsl, 300, 42);
 		#endif

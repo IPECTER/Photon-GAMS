@@ -8,10 +8,10 @@
 #include "/include/utility/random.glsl"
 #include "/include/utility/space_conversion.glsl"
 
-const uint  air_fog_min_step_count    = 8;
-const uint  air_fog_max_step_count    = 25;
-const float air_fog_step_count_growth = 0.1;
-const float air_fog_volume_top        = 320.0;
+const uint  air_fog_min_step_count    = AIR_FOG_MIN_STEPS; // 25  8
+const uint  air_fog_max_step_count    = AIR_FOG_MAX_STEPS; // 50  25
+const float air_fog_step_count_growth = AIR_FOG_STEP_GROWTH; //  0.1
+const float air_fog_volume_top        = AIR_FOG_VOLUME_TOP; // 320.0
 const float air_fog_volume_bottom     = SEA_LEVEL - 24.0;
 const vec2  air_fog_falloff_start     = vec2(AIR_FOG_RAYLEIGH_FALLOFF_START, AIR_FOG_MIE_FALLOFF_START) + SEA_LEVEL;
 const vec2  air_fog_falloff_half_life = vec2(AIR_FOG_RAYLEIGH_FALLOFF_HALF_LIFE, AIR_FOG_MIE_FALLOFF_HALF_LIFE);
@@ -37,6 +37,8 @@ vec2 air_fog_density(vec3 world_pos) {
 }
 
 mat2x3 raymarch_air_fog(vec3 world_start_pos, vec3 world_end_pos, bool sky, float skylight, float dither) {
+	const uint air_fog_multiple_scattering_iterations = FOG_MULTIPLE_SCATTERING_ITERATIONS; // 4
+
 	vec3 world_dir = world_end_pos - world_start_pos;
 
 	float length_sq = length_squared(world_dir);
@@ -115,6 +117,13 @@ mat2x3 raymarch_air_fog(vec3 world_start_pos, vec3 world_end_pos, bool sky, floa
 		float depth1 = texelFetch(shadowtex1, shadow_texel, 0).x;
 		float shadow = step(float(clamp01(shadow_screen_pos) == shadow_screen_pos) * shadow_screen_pos.z, depth1);
 	#endif
+
+	#if defined CLOUD_SHADOWS && defined FOG_CLOUD_SHADOWS && defined WORLD_OVERWORLD
+		shadow *= get_cloud_shadows(colortex8, world_pos - cameraPosition);
+	#endif
+#elif defined CLOUD_SHADOWS && defined FOG_CLOUD_SHADOWS && defined WORLD_OVERWORLD
+	float shadow = get_cloud_shadows(colortex8, world_pos - cameraPosition);
+
 #else
 		#define shadow 1.0
 #endif
@@ -165,7 +174,7 @@ mat2x3 raymarch_air_fog(vec3 world_start_pos, vec3 world_end_pos, bool sky, floa
 
 	scattering += 2.0 * light_sky * vec2(isotropic_phase) * ambient_color;
 
-	for (int i = 0; i < 4; ++i) {
+	for (int i = 0; i < air_fog_multiple_scattering_iterations; ++i) {
 		float mie_phase = 0.7 * henyey_greenstein_phase(LoV, 0.5 * anisotropy) + 0.3 * henyey_greenstein_phase(LoV, -0.2 * anisotropy);
 
 		scattering += scatter_amount * (light_sun * vec2(isotropic_phase, mie_phase)) * light_color;
