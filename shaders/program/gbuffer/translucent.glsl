@@ -455,13 +455,12 @@ void main() {
 
 #if   WATER_TEXTURE == WATER_TEXTURE_OFF
 		base_color = vec4(0.0);
-//#elif WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT || WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
-#elif WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT
+#elif WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT || WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
 		base_color = texture(gtexture, uv, lod_bias);
 		float texture_highlight = 0.5 * sqr(linear_step(0.63, 1.0, base_color.r)) + 0.03 * base_color.r;
-		//#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
-		//    texture_highlight *= 1.0 - cube(light_levels.y);
-		//#endif
+		#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
+		   texture_highlight *= 1.0 - cube(light_levels.y);
+		#endif
 
 		material.albedo     = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight);
 		material.roughness += 0.3 * texture_highlight;
@@ -492,8 +491,7 @@ void main() {
 #ifdef WATER_EDGE_HIGHLIGHT
 		float dist = layer_dist * max(abs(world_dir.y), eps);
 
-	//#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT || WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
-	#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT
+	#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT || WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
 		float edge_highlight = cube(max0(1.0 - 2.0 * dist)) * (1.0 + 8.0 * texture_highlight);
 	#else
 		float edge_highlight = cube(max0(1.0 - 2.0 * dist));
