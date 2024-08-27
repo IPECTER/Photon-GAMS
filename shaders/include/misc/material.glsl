@@ -1004,7 +1004,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		if (material_mask > 197u && material_mask < 201u || material_mask > 213u && material_mask < 217u || material_mask > 69u && material_mask < 73u || material_mask > 229u && material_mask < 233u) { // 264 - 331
 		// Blue, Light blue, Cyan
 		#ifdef HARDCODED_EMISSION
-		material.emission = max(material.albedo * isolate_hue(hsl, 220.0, 70), material.albedo * linear_step(0.7, 0.8, hsl.z));
+		material.emission = max(material.albedo * isolate_hue(hsl, 230.0, 70), material.albedo * linear_step(0.7, 0.8, hsl.z));
 		#endif
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
@@ -1028,7 +1028,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 			if (material_mask == 203u || material_mask == 219u || material_mask == 75u || material_mask == 235u) { // 264 - 331
 		//Pink
 		#ifdef HARDCODED_EMISSION
-		material.emission = material.albedo * albedo_srgb * isolate_hue(hsl, 300, 42);
+		material.emission = material.albedo * albedo_srgb * isolate_hue(hsl, 300, 50);
 		#endif
 		#ifdef HARDCODED_SPECULAR
 		float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);
@@ -1105,7 +1105,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 		vec3 ap1 = material.albedo * rec2020_to_ap1_unlit;
 		float l = 0.5 * (min_of(ap1) + max_of(ap1));
 		float redness = ap1.r * rcp(ap1.g + ap1.b);
-		material.emission = 0.2 * ORE_BRIGHTNESS * albedo_sqrt * step(0.0, normalize(step(0.40, redness * l) + 0.3 * albedo_sqrt * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 180.0, 180.0)) * step(0.1, hsl.y) * step(0.76, hsl.z)));
+		material.emission = 0.2 * ORE_BRIGHTNESS * albedo_sqrt * step(0.0, normalize(step(0.40, redness * l) + 0.3 * albedo_sqrt * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 180.0, 180.0)) * step(0.10, hsl.y) * step(0.4, hsl.z)));
 		#endif
 	}
 

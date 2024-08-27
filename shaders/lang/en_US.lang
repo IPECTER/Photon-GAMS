@@ -352,10 +352,14 @@ option.NEBULA_COLOR3_G = Nebula Color 3 Green
 option.NEBULA_COLOR3_B = Nebula Color 3 Blue
 
 # Galaxy
-option.GALAXY_ENABLED                       = Galaxy
-option.GALAXY_ENABLED.comment               = Enables the galaxy effect
-option.GALAXY_INTENSITY                     = Galaxy Intensity
-option.GALAXY_INTENSITY.comment             = Controls the intensity of the galaxy effect
+option.GALAXY                          = Galaxy
+option.GALAXY.comment                  = Galaxy image in the night sky
+option.GALAXY_INTENSITY                = Galaxy Intensity
+option.GALAXY_INTENSITY.comment        = Controls the brightness of the galaxy in the night sky
+screen.galaxy_color                    = §b🌌§r Galaxy Color
+option.GALAXY_TINT_R                   = Galaxy Color Red
+option.GALAXY_TINT_G                   = Galaxy Color Green
+option.GALAXY_TINT_B                   = Galaxy Color Blue
 
 # Shooting Stars
 option.SHOOTING_STARS                        = Shooting Stars
@@ -524,6 +528,8 @@ option.CLOUDS_CIRRUS_WIND_SPEED            = Wind Speed
 suffix.CLOUDS_CIRRUS_WIND_SPEED            = m/s
 option.CLOUDS_CIRRUS_WIND_ANGLE            = Wind Angle
 suffix.CLOUDS_CIRRUS_WIND_ANGLE            = °
+
+option.CLOUDS_ROUGHNESS                    = Clouds Roughness
 
 option.AURORA_TYPE                     = Aurora Style
 option.AURORA_COLOR                    = Aurora Color

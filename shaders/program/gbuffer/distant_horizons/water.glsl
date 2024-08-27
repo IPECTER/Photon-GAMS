@@ -68,6 +68,7 @@ void main() {
     );
 tint          = gl_Color;
     normal        = mat3(gbufferModelViewInverse) * (mat3(gl_ModelViewMatrix) * gl_Normal);
+
 	light_color   = texelFetch(colortex4, ivec2(191, 0), 0).rgb;
 	ambient_color = texelFetch(colortex4, ivec2(191, 1), 0).rgb;
 
@@ -304,6 +305,15 @@ void main() {
 
 		base_color = vec4(0.0);
 
+#ifdef WATER_FOAM
+		float dist = layer_dist * max(abs(world_dir.y), eps);
+
+		float foam = cube(max0(1.0 - 2.0 * dist));
+
+		material.albedo += 0.05 * foam / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y);
+		material.albedo  = clamp01(material.albedo);
+#endif
+	} else {
 		base_color = tint;
 		vec2 adjusted_light_levels = light_levels;
 		material = material_from(

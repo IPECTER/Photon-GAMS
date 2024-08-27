@@ -32,7 +32,7 @@ float get_blocklight_falloff(float blocklight, float skylight, float ao) {
 	      falloff *= mix(cube(ao), 1.0, clamp01(falloff));                                                 // Stronger AO further from the light source
 		  falloff *= mix(1.0, ao * dampen(abs(cos(2.0 * frameTimeCounter))) * 0.67 + 0.2, darknessFactor); // Pulsing blocklight with darkness effect
 		  falloff *= 1.0 - 0.2 * time_noon * skylight - 0.2 * skylight;                                    // Reduce blocklight intensity in daylight
-		  falloff += min(2.7 * pow12(blocklight), 0.9);                                                    // Strong highlight around the light source, visible even in the daylight
+		  falloff += min(2.7 * pow12(blocklight), 2.9);                                                    // Strong highlight around the light source, visible even in the daylight
 		  falloff *= smoothstep(0.0, 0.125, blocklight);                                                   // Ease transition at edge of lightmap
 
 	return falloff;
