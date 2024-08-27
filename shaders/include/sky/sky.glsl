@@ -205,8 +205,6 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 #endif
 #endif
 
-	sky += draw_galaxy(ray_dir);
-
 	// Sky gradient
 
 	sky *= atmosphere_transmittance(ray_dir.y, planet_radius) * (1.0 - rainStrength);
