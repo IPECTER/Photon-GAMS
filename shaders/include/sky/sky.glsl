@@ -117,8 +117,6 @@ vec3 draw_sun(vec3 ray_dir) { return draw_sun(ray_dir, vec3(1.0)); }
 
 const float moon_luminance = 4.0; // luminance of moon disk
 
-uniform sampler2D colortex14; // star map image
-
 /*vec3 draw_moon(vec3 ray_dir) {
 	float nu = dot(ray_dir, moon_dir);
 }*/
