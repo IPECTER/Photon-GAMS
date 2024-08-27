@@ -258,6 +258,9 @@ void main() {
 		bloomy_fog = spherical_fog(far, nether_fog_start, nether_bloomy_fog_density * (1.0 - blindness)) * 0.5 + 0.5;
 #endif
 
+		// Bloomy rain
+		bloomy_fog = min(bloomy_fog, step(weather_particles.a, 0.05));
+
 		// purkinje shift
 		scene_color = purkinje_shift(scene_color, vec2(0.0, 1.0));
 
@@ -549,6 +552,9 @@ void main() {
 #if defined WORLD_NETHER
 	bloomy_fog = spherical_fog(view_dist, nether_fog_start, nether_bloomy_fog_density) * 0.33 + 0.67;
 #endif
+
+	// Bloomy rain
+	bloomy_fog = min(bloomy_fog, step(weather_particles.a, 0.05));
 
 	// Apply purkinje shift
 	scene_color = purkinje_shift(scene_color, light_levels);
