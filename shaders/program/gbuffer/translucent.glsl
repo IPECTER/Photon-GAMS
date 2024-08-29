@@ -513,6 +513,7 @@ void main() {
 #ifdef SPECULAR_MAPPING
 		vec4 specular_map = texture(specular, uv, lod_bias);
 #endif
+
 		// Lightning (old Iris)
 #if defined PROGRAM_GBUFFERS_ENTITIES_TRANSLUCENT
 		if (material_mask == 102) base_color = vec4(1.0);
@@ -537,6 +538,7 @@ void main() {
 		material.albedo   = vec3(1.0);
 		material.emission = vec3(1.0);
 #endif
+
 
 		//--//
 

@@ -43,9 +43,11 @@ vec3 stable_star_field(vec2 coord, float star_threshold) {
 	     + unstable_star_field(i + vec2(0.0, 1.0), star_threshold) * f.y * (1.0 - f.x)
 	     + unstable_star_field(i + vec2(1.0, 1.0), star_threshold) * f.x * f.y;
 }
+
 uniform sampler2D colortex14;
 
 vec3 draw_stars(vec3 ray_dir, float galaxy_luminance) {
+
 	// Adjust star threshold so that brightest stars appear first
 #ifdef WORLD_OVERWORLD
 	float star_threshold = 1.0 - 0.008 * STARS_COVERAGE * smoothstep(-0.2, 0.05, -sun_dir.y) - 0.5 * cube(galaxy_luminance);
@@ -60,8 +62,23 @@ vec3 draw_stars(vec3 ray_dir, float galaxy_luminance) {
 	return stable_star_field(coord, star_threshold);
 }
 
+const float sun_luminance  = SUN_LUMINANCE * SUN_I; // luminance of sun disk
+
+vec3 draw_sun(vec3 ray_dir, vec3 sun_color) {
+	float nu = dot(ray_dir, sun_dir);
+
+	// Limb darkening model from http://www.physics.hmc.edu/faculty/esin/a101/limbdarkening.pdf
+	const vec3 alpha = vec3(0.429, 0.522, 0.614);
+	float center_to_edge = max0(sun_angular_radius - fast_acos(nu));
+	vec3 limb_darkening = pow(vec3(1.0 - sqr(1.0 - center_to_edge)), 0.5 * alpha);
+
+	return sun_luminance * sun_color * step(0.0, center_to_edge) * limb_darkening;
+}
+
+vec3 draw_sun(vec3 ray_dir) { return draw_sun(ray_dir, vec3(1.0)); }
+
 vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
-	const vec3 galaxy_tint = vec3(0.75, 0.66, 1.0) * GALAXY_INTENSITY;
+	const vec3 galaxy_tint = vec3(GALAXY_TINT_R, GALAXY_TINT_G, GALAXY_TINT_B) * GALAXY_INTENSITY;
 
 	float galaxy_intensity = 0.05 + 1.0 * linear_step(-0.1, 0.25, -sun_dir.y);
 
@@ -87,21 +104,6 @@ vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
 
 	return max0(galaxy);
 }
-
-const float sun_luminance  = SUN_LUMINANCE * SUN_I; // luminance of sun disk
-
-vec3 draw_sun(vec3 ray_dir, vec3 sun_color) {
-	float nu = dot(ray_dir, sun_dir);
-
-	// Limb darkening model from http://www.physics.hmc.edu/faculty/esin/a101/limbdarkening.pdf
-	const vec3 alpha = vec3(0.429, 0.522, 0.614);
-	float center_to_edge = max0(sun_angular_radius - fast_acos(nu));
-	vec3 limb_darkening = pow(vec3(1.0 - sqr(1.0 - center_to_edge)), 0.5 * alpha);
-
-	return sun_luminance * sun_color * step(0.0, center_to_edge) * limb_darkening;
-}
-
-vec3 draw_sun(vec3 ray_dir) { return draw_sun(ray_dir, vec3(1.0)); }
 
 //----------------------------------------------------------------------------//
 #if   defined WORLD_OVERWORLD
@@ -167,6 +169,7 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 #else
 	const float galaxy_luminance = 0.0;
 #endif
+
 
 	// Sun, moon and stars
 

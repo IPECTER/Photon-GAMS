@@ -240,7 +240,7 @@ void main() {
 	// Sky early exit
 
 	if (depth0 == 1.0 && !front_is_dh_terrain) {
-		// weather particles
+				// weather particles
 		scene_color = mix(scene_color, weather_particles.rgb, weather_particles.a);
 
 		// Apply volumetric fog
@@ -257,7 +257,6 @@ void main() {
 #if defined WORLD_NETHER
 		bloomy_fog = spherical_fog(far, nether_fog_start, nether_bloomy_fog_density * (1.0 - blindness)) * 0.5 + 0.5;
 #endif
-
 		// Bloomy rain
 		bloomy_fog = min(bloomy_fog, step(weather_particles.a, 0.05));
 
@@ -425,9 +424,8 @@ void main() {
 
 #endif
 
-	// Weather particles
+// Weather particles
 	scene_color = mix(scene_color, weather_particles.rgb, weather_particles.a);
-
 
 	// Rain puddles
 
