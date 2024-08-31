@@ -1,4 +1,4 @@
-#ifndef INCLUDE_MISC_WEATHER
+#if !defined INCLUDE_MISC_WEATHER
 #define INCLUDE_MISC_WEATHER
 
 #include "/include/utility/color.glsl"
@@ -7,12 +7,12 @@
 #define daily_weather_blend(weather_function) mix(weather_function(worldDay), weather_function(worldDay + 1), weather_mix_factor())
 
 uint weather_day_index(int world_day) {
-#if WEATHER_DAY == -1
 	// Start at noon
 	world_day -= int(worldTime <= 6000);
 
 	const uint day_count = 12;
 
+#if WEATHER_DAY == -1
 	uint day_index = uint(world_day);
 	     day_index = lowbias32(day_index) % day_count;
 #else
@@ -52,7 +52,7 @@ void daily_weather_clouds(
 	case 0:
 		clouds_cumulus_coverage         = vec2(WEATHER_D0_CLOUDS_CUMULUS_MIN, WEATHER_D0_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D0_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D0_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D0_CLOUDS_CIRRUS, WEATHER_D0_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D0_CLOUDS_CIRRUS, WEATHER_D0_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D0_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D0_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D0_CLOUDS_STRATUS_AMOUNT;
@@ -61,7 +61,7 @@ void daily_weather_clouds(
 	case 1:
 		clouds_cumulus_coverage         = vec2(WEATHER_D1_CLOUDS_CUMULUS_MIN, WEATHER_D1_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D1_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D1_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D1_CLOUDS_CIRRUS, WEATHER_D1_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D1_CLOUDS_CIRRUS, WEATHER_D1_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D1_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D1_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D1_CLOUDS_STRATUS_AMOUNT;
@@ -70,7 +70,7 @@ void daily_weather_clouds(
 	case 2:
 		clouds_cumulus_coverage         = vec2(WEATHER_D2_CLOUDS_CUMULUS_MIN, WEATHER_D2_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D2_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D2_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D2_CLOUDS_CIRRUS, WEATHER_D2_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D2_CLOUDS_CIRRUS, WEATHER_D2_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D2_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D2_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D2_CLOUDS_STRATUS_AMOUNT;
@@ -79,7 +79,7 @@ void daily_weather_clouds(
 	case 3:
 		clouds_cumulus_coverage         = vec2(WEATHER_D3_CLOUDS_CUMULUS_MIN, WEATHER_D3_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D3_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D3_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D3_CLOUDS_CIRRUS, WEATHER_D3_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D3_CLOUDS_CIRRUS, WEATHER_D3_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D3_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D3_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D3_CLOUDS_STRATUS_AMOUNT;
@@ -88,7 +88,7 @@ void daily_weather_clouds(
 	case 4:
 		clouds_cumulus_coverage         = vec2(WEATHER_D4_CLOUDS_CUMULUS_MIN, WEATHER_D4_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D4_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D4_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D4_CLOUDS_CIRRUS, WEATHER_D4_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D4_CLOUDS_CIRRUS, WEATHER_D4_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D4_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D4_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D4_CLOUDS_STRATUS_AMOUNT;
@@ -97,7 +97,7 @@ void daily_weather_clouds(
 	case 5:
 		clouds_cumulus_coverage         = vec2(WEATHER_D5_CLOUDS_CUMULUS_MIN, WEATHER_D5_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D5_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D5_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D5_CLOUDS_CIRRUS, WEATHER_D5_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D5_CLOUDS_CIRRUS, WEATHER_D5_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D5_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D5_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D5_CLOUDS_STRATUS_AMOUNT;
@@ -106,7 +106,7 @@ void daily_weather_clouds(
 	case 6:
 		clouds_cumulus_coverage         = vec2(WEATHER_D6_CLOUDS_CUMULUS_MIN, WEATHER_D6_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D6_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D6_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D6_CLOUDS_CIRRUS, WEATHER_D6_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D6_CLOUDS_CIRRUS, WEATHER_D6_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D6_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D6_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D6_CLOUDS_STRATUS_AMOUNT;
@@ -115,7 +115,7 @@ void daily_weather_clouds(
 	case 7:
 		clouds_cumulus_coverage         = vec2(WEATHER_D7_CLOUDS_CUMULUS_MIN, WEATHER_D7_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D7_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D7_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D7_CLOUDS_CIRRUS, WEATHER_D7_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D7_CLOUDS_CIRRUS, WEATHER_D7_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D7_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D7_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D7_CLOUDS_STRATUS_AMOUNT;
@@ -124,7 +124,7 @@ void daily_weather_clouds(
 	case 8:
 		clouds_cumulus_coverage         = vec2(WEATHER_D8_CLOUDS_CUMULUS_MIN, WEATHER_D8_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D8_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D8_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D8_CLOUDS_CIRRUS, WEATHER_D8_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D8_CLOUDS_CIRRUS, WEATHER_D8_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D8_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D8_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D8_CLOUDS_STRATUS_AMOUNT;
@@ -133,7 +133,7 @@ void daily_weather_clouds(
 	case 9:
 		clouds_cumulus_coverage         = vec2(WEATHER_D9_CLOUDS_CUMULUS_MIN, WEATHER_D9_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D9_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D9_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D9_CLOUDS_CIRRUS, WEATHER_D9_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D9_CLOUDS_CIRRUS, WEATHER_D9_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D9_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D9_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D9_CLOUDS_STRATUS_AMOUNT;
@@ -142,7 +142,7 @@ void daily_weather_clouds(
 	case 10:
 		clouds_cumulus_coverage         = vec2(WEATHER_D10_CLOUDS_CUMULUS_MIN, WEATHER_D10_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D10_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D10_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D10_CLOUDS_CIRRUS, WEATHER_D10_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D10_CLOUDS_CIRRUS, WEATHER_D10_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D10_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D10_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D10_CLOUDS_STRATUS_AMOUNT;
@@ -151,7 +151,7 @@ void daily_weather_clouds(
 	case 11:
 		clouds_cumulus_coverage         = vec2(WEATHER_D11_CLOUDS_CUMULUS_MIN, WEATHER_D11_CLOUDS_CUMULUS_MAX);
 		clouds_altocumulus_coverage     = vec2(WEATHER_D11_CLOUDS_ALTOCUMULUS_MIN, WEATHER_D11_CLOUDS_ALTOCUMULUS_MAX);
-		clouds_cirrus_coverage          = vec2(WEATHER_D11_CLOUDS_CIRRUS, WEATHER_D11_CLOUDS_CC);
+		clouds_cirrus_coverage          = vec2(WEATHER_D11_CLOUDS_CIRRUS, WEATHER_D11_CLOUDS_CIRROCUMULUS);
 		clouds_cumulus_congestus_amount = WEATHER_D11_CLOUDS_CUMULUS_CONGESTUS_AMOUNT;
 		clouds_cumulonimbus_amount      = WEATHER_D11_CLOUDS_CUMULONIMBUS_AMOUNT;
 		clouds_stratus_amount           = WEATHER_D11_CLOUDS_STRATUS_AMOUNT;
@@ -201,7 +201,7 @@ void clouds_weather_variation(
 
 	clouds_cumulus_coverage = mix(clouds_cumulus_coverage, vec2(0.6, 0.8), wetness);
 	clouds_altocumulus_coverage = mix(clouds_altocumulus_coverage, vec2(0.4, 0.9), wetness * 0.75);
-	clouds_cirrus_coverage = mix(clouds_cirrus_coverage, vec2(0.7, 0.0), wetness * 0.50);
+	clouds_cirrus_coverage.x = mix(clouds_cirrus_coverage.x, 0.7, wetness * 0.50);
 	clouds_cumulus_congestus_amount *= 1.0 - wetness;
 	clouds_cumulonimbus_amount *= mix(1.0, 1.5 * wetness, wetness); // mix(clamp01(1.0 - 1.75 * wetness) ...
 	clouds_stratus_amount = clamp01(clouds_stratus_amount + 0.7 * wetness);
@@ -210,7 +210,7 @@ void clouds_weather_variation(
 
 	clouds_cumulus_coverage *= CLOUDS_CUMULUS_COVERAGE;
 	clouds_altocumulus_coverage *= CLOUDS_ALTOCUMULUS_COVERAGE;
-	clouds_cirrus_coverage *= vec2(CLOUDS_CIRRUS_COVERAGE, CLOUDS_CC_COVERAGE);
+	clouds_cirrus_coverage *= vec2(CLOUDS_CIRRUS_COVERAGE, CLOUDS_CIRROCUMULUS_COVERAGE);
 	clouds_cumulus_congestus_amount *= CLOUDS_CUMULUS_CONGESTUS_COVERAGE;
 	clouds_cumulonimbus_amount *= CLOUDS_CUMULONIMBUS_COVERAGE;
 
@@ -230,7 +230,6 @@ mat2x3 air_fog_rayleigh_coeff() {
 	const vec3 rayleigh_taiga  = from_srgb(vec3(AIR_FOG_RAYLEIGH_R_TAIGA,  AIR_FOG_RAYLEIGH_G_TAIGA,  AIR_FOG_RAYLEIGH_B_TAIGA )) * AIR_FOG_RAYLEIGH_DENSITY_TAIGA;
 	const vec3 rayleigh_jungle = from_srgb(vec3(AIR_FOG_RAYLEIGH_R_JUNGLE, AIR_FOG_RAYLEIGH_G_JUNGLE, AIR_FOG_RAYLEIGH_B_JUNGLE)) * AIR_FOG_RAYLEIGH_DENSITY_JUNGLE;
 	const vec3 rayleigh_swamp  = from_srgb(vec3(AIR_FOG_RAYLEIGH_R_SWAMP,  AIR_FOG_RAYLEIGH_G_SWAMP,  AIR_FOG_RAYLEIGH_B_SWAMP )) * AIR_FOG_RAYLEIGH_DENSITY_SWAMP;
-
 
 	vec3 rayleigh = rayleigh_normal * biome_temperate
 	              + rayleigh_arid   * biome_arid
@@ -259,14 +258,13 @@ mat2x3 air_fog_mie_coeff() {
 	                + AIR_FOG_MIE_DENSITY_MIDNIGHT * time_midnight
 	                + AIR_FOG_MIE_DENSITY_BLUE_HOUR * blue_hour;
 
-
 	mie_coeff = mix(mie_coeff, AIR_FOG_MIE_DENSITY_RAIN, rainStrength * biome_may_rain);
 	mie_coeff = mix(mie_coeff, AIR_FOG_MIE_DENSITY_SNOW, rainStrength * biome_may_snow);
 
 	float mie_albedo = mix(0.9, 0.5, rainStrength * biome_may_rain);
 
-	vec3 scattering_coeff = vec3(mie_coeff * mie_albedo);
 	vec3 extinction_coeff = vec3(mie_coeff);
+	vec3 scattering_coeff = vec3(mie_coeff * mie_albedo);
 
 #ifdef DESERT_SANDSTORM
 	const float desert_sandstorm_density    = 0.2;

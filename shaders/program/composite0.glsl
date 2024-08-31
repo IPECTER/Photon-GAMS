@@ -189,7 +189,7 @@ uniform float time_midnight;
 
 #if defined WORLD_OVERWORLD
 #ifdef CLOUD_SHADOWS
-#include "/include/light/cloud_shadows.glsl"
+#include "/include/lighting/cloud_shadows.glsl"
 #endif
 #include "/include/fog/air_fog_vl.glsl"
 #endif

@@ -133,21 +133,21 @@ uniform float biome_humidity;
 #define WEATHER_CLOUDS
 
 #ifdef WORLD_OVERWORLD
-#include "/include/light/colors/light_color.glsl"
-#include "/include/light/colors/weather_color.glsl"
+#include "/include/lighting/colors/light_color.glsl"
+#include "/include/lighting/colors/weather_color.glsl"
 #include "/include/misc/weather.glsl"
 #endif
 
 #ifdef WORLD_NETHER
-#include "/include/light/colors/nether_color.glsl"
+#include "/include/lighting/colors/nether_color.glsl"
 #endif
 
 #ifdef WORLD_END
-#include "/include/light/colors/end_color.glsl"
+#include "/include/lighting/colors/end_color.glsl"
 #endif
 
 #ifdef WORLD_SPACE
-#include "/include/light/colors/space_color.glsl"
+#include "/include/lighting/colors/space_color.glsl"
 #endif
 
 #if defined WORLD_OVERWORLD
