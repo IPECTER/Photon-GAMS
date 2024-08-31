@@ -57,9 +57,6 @@ uniform sampler2D shadowtex0;
 #include "/include/utility/dithering.glsl"
 #include "/include/utility/text_rendering.glsl"
 
-uniform vec3 sun_dir;
-
-
 const int debug_text_scale = 2;
 ivec2 debug_text_position = ivec2(0, int(viewHeight) / debug_text_scale);
 
@@ -155,7 +152,7 @@ void main() {
 	}
 
 	scene_color = dither_8bit(scene_color, bayer16(vec2(texel)));
-
+	
 #if   DEBUG_VIEW == DEBUG_VIEW_SAMPLER
 	if (clamp(texel, ivec2(0), ivec2(textureSize(DEBUG_SAMPLER, 0))) == texel) {
 		scene_color = texelFetch(DEBUG_SAMPLER, texel, 0).rgb;
