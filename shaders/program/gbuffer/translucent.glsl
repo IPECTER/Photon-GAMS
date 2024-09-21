@@ -99,9 +99,8 @@ void main() {
 	material_mask = get_material_mask();
 	tbn           = get_tbn_matrix();
 
-	int lighting_color_x = SKY_MAP_LIGHT_X;
-	light_color   = texelFetch(colortex4, ivec2(lighting_color_x, 0), 0).rgb;
-	ambient_color = texelFetch(colortex4, ivec2(lighting_color_x, 1), 0).rgb;
+	light_color   = texelFetch(colortex4, ivec2(191, 0), 0).rgb;
+	ambient_color = texelFetch(colortex4, ivec2(191, 1), 0).rgb;
 
 	bool is_top_vertex = uv.y < mc_midTexCoord.y;
 
@@ -462,15 +461,43 @@ void main() {
 		   texture_highlight *= 1.0 - cube(light_levels.y);
 		#endif
 
+	#ifdef WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR
+		texture_highlight -= 0.02 * base_color.r;
+		material.albedo  = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight * pow(normalize(srgb_eotf_inv(tint.rgb) * rec709_to_working_color), vec3(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY) * (1.3 + (1-pow(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY, 3.0))))) * 2.0 * WATER_TEXTURE_HIGHLIGHT_INTENSITY;
+	#else
 		material.albedo     = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight);
+	#endif
 		material.roughness += 0.3 * texture_highlight;
 #elif WATER_TEXTURE == WATER_TEXTURE_VANILLA
 		base_color = texture(gtexture, uv, lod_bias) * tint;
 		material.albedo = srgb_eotf_inv(base_color.rgb * base_color.a) * rec709_to_working_color;
 #endif
 
+	#ifdef WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR & WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
+		#if light_levels.y > 0.0
+		texture_highlight = 0;
+		#endif
+	#endif
+
 		// Water absorption
+		#if BIOME_WATER_COLOR_INTENSITY == 0.5
+		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color * 0.5;
+		#endif
+		#if BIOME_WATER_COLOR_INTENSITY == 1.0
 		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color;
+		#endif
+		#if BIOME_WATER_COLOR_INTENSITY == 1.5
+		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color * 1.5;
+		#endif
+		#if BIOME_WATER_COLOR_INTENSITY == 2.0
+		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color * 2.0;
+		#endif
+		#if BIOME_WATER_COLOR_INTENSITY == 2.5
+		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color * 2.5;
+		#endif
+		#if BIOME_WATER_COLOR_INTENSITY == 3.0
+		biome_water_color = srgb_eotf_inv(tint.rgb) * rec709_to_working_color * 3.0;
+		#endif
 		absorption_coeff = biome_water_coeff(biome_water_color);
 
 #if defined (PHYSICS_MOD_OCEAN) && defined (PHYSICS_OCEAN)
@@ -497,8 +524,11 @@ void main() {
 		float edge_highlight = cube(max0(1.0 - 2.0 * dist));
 	#endif
 		edge_highlight *= WATER_EDGE_HIGHLIGHT_INTENSITY * max0(normal.y) * (1.0 - 0.5 * sqr(light_levels.y));
-
+	#ifdef WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR
+		material.albedo += 0.1 * edge_highlight / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y) * pow(normalize(srgb_eotf_inv(tint.rgb) * rec709_to_working_color), vec3(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY) * (1.3 + (1-pow(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY, 3.0))));
+	#else
 		material.albedo += 0.1 * edge_highlight / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y);
+	#endif
 		material.albedo  = clamp01(material.albedo);
 #endif
 
