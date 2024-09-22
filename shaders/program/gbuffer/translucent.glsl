@@ -456,14 +456,21 @@ void main() {
 		base_color = vec4(0.0);
 #elif WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT || WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
 		base_color = texture(gtexture, uv, lod_bias);
-		float texture_highlight = 0.5 * sqr(linear_step(0.63, 1.0, base_color.r)) + 0.03 * base_color.r;
-		#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
-		   texture_highlight *= 1.0 - cube(light_levels.y);
+		float texture_highlight = (0.5 * sqr(linear_step(0.63, 1.0, base_color.r)) + 0.03 * base_color.r - 0.00 * base_color.r * smoothstep(0, 0.8, (0.90 - cube(light_levels.y)))) * WATER_TEXTURE_HIGHLIGHT_INTENSITY;
+
+		#ifdef WORLD_OVERWORLD || WORLD_END
+			#if WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT
+				texture_highlight -= (texture_highlight) * smoothstep(0, 0.8, (0.90 - cube(light_levels.y)));
+				texture_highlight += (0.5 * sqr(linear_step(0.63, 1.0, base_color.r)) + 0.02 * base_color.r - 0.01 * base_color.r * smoothstep(0, 0.8, (0.90 - cube(light_levels.y)))) * smoothstep(0, 0.8, (0.95 - cube(light_levels.y))) * WATER_TEXTURE_HIGHLIGHT_UNDERGROUND_INTENSITY;
+			#elif WATER_TEXTURE == WATER_TEXTURE_HIGHLIGHT_UNDERGROUND
+				texture_highlight *= smoothstep(0, 0.8, (0.95 - cube(light_levels.y))) * WATER_TEXTURE_HIGHLIGHT_UNDERGROUND_INTENSITY * (1/WATER_TEXTURE_HIGHLIGHT_INTENSITY);
+			#endif
 		#endif
 
 	#ifdef WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR
-		texture_highlight -= 0.02 * base_color.r;
-		material.albedo  = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight * pow(normalize(srgb_eotf_inv(tint.rgb) * rec709_to_working_color), vec3(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY) * (1.3 + (1-pow(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY, 3.0))))) * 2.0 * WATER_TEXTURE_HIGHLIGHT_INTENSITY;
+		material.albedo  = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight * pow(normalize(srgb_eotf_inv(tint.rgb) * rec709_to_working_color), vec3(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY) * (1.3 + (1-pow(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY, 3.0)))));
+		//material.albedo -= material.albedo * tint.rgb;
+		material.albedo += tint.rgb * clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight) * 2;
 	#else
 		material.albedo     = clamp01(0.5 * exp(-2.0 * water_absorption_coeff) * texture_highlight);
 	#endif
@@ -526,6 +533,7 @@ void main() {
 		edge_highlight *= WATER_EDGE_HIGHLIGHT_INTENSITY * max0(normal.y) * (1.0 - 0.5 * sqr(light_levels.y));
 	#ifdef WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR
 		material.albedo += 0.1 * edge_highlight / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y) * pow(normalize(srgb_eotf_inv(tint.rgb) * rec709_to_working_color), vec3(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY) * (1.3 + (1-pow(WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY, 3.0))));
+		material.albedo += 0.1 * edge_highlight / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y) * tint.rgb;
 	#else
 		material.albedo += 0.1 * edge_highlight / mix(1.0, max(dot(ambient_color, luminance_weights_rec2020), 0.5), light_levels.y);
 	#endif
