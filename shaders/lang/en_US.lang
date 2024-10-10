@@ -273,6 +273,10 @@ option.COLORED_LIGHT_I                 = Colored Light Intensity
 option.COLOREDLIGHT_SATURATION         = Colored Light Saturation
 option.GLOWING_FLOWERS                 = §e🌷§r Glowing Flowers
 option.GLOWING_ORE                     = §e⛏§r Glowing Ore
+option.END_COLORED_LIGHTING            = End Violet Lighting Blocks
+comment.END_COLORED_LIGHTING           = Fire, lava and torch blocks id's is violet in the End.
+option.SCULK_I                         = Sculk Light Intensity
+option.COLORED_CANDLES                 = Colored Candles
 
 suffix.shadowMapResolution             = ²
 suffix.sunPathRotation                 = °
