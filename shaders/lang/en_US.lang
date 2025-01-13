@@ -19,15 +19,18 @@ screen.misc                            = §e⌛§r Misc
 screen.box                             = Box
 screen.compatibility                   = Compatibility
 screen.world_curvature                 = World Curvature Settings
+screen.enchantment_glint_color         = §d🎆§r Enchantment Glint Color
 
-screen.colored_lights                  = Colored Lights Settings
+screen.colored_lights                  = 🌈§a💡§r Colored Lights Settings
 screen.rp_settings                     = Resource Pack Settings
 screen.reflections                     = Reflections
-screen.light_sources                   = Light Sources
+screen.refraction                      = Refraction
+screen.light_sources                   = §6💡§r Light Sources
 screen.shadows                         = Shadows
-screen.color_grading                   = Color Grading
-screen.exposure                        = Exposure
-screen.tonemap_settings                = Tonemap Settings
+screen.ao                              = Ambient Occlusion
+screen.color_grading                   = 🌈 Color Grading
+screen.exposure                        = §b📸§r Exposure
+screen.tonemap_settings                = §a🎞§r Tonemap Settings
 
 screen.dof_settings                    = DoF Settings
 
@@ -70,6 +73,7 @@ screen.clouds_cumulus_congestus        = Cumulus Congestus Clouds Settings
 screen.clouds_cumulonimbus             = Cumulonimbus Clouds Settings
 screen.clouds_cirrus                   = Cirrus/Cirrocumulus Clouds Settings
 screen.clouds_minecrafty               = Blocky Clouds Settings
+screen.clouds_noctilucent              = Noctilucent Clouds Settings
 screen.nebula                          = Nebula
 screen.nebula_color                    = Nebula Color
 screen.nebula_color.comment            = Adjust the colors of different nebula components:      Cloud 1-4 Color: Sets the color for each cloud layer        Space Color: Determines the background color of space      These settings affect the overall appearance and mood of the nebula
@@ -161,8 +165,11 @@ option.WORLD_CURVATURE          = World Curvature
 option.DISABLE_FRUSTUM_CULLING  = Disable Frustum Culling
 option.CURVATURE_MODE           = Curvature Mode
 option.CURVATURE_MODE.comment   = Squared Distance - Displaces Y position based on squared XZ distance (Parabola shape) \nBasic Spherical - Projects the surface to a sphere (Produces squished or elongated shapes) \nLog Spherical - Projects the surface to a sphere while maintaining the aspect ratio between sides (Changes scale by height)
+option.OVERWORLD_CURVATURE      = Overworld Curvature
 option.OVERWORLD_CURVATURE_SIZE = Overworld Curvature Size
+option.NETHER_CURVATURE         = Nether Curvature
 option.NETHER_CURVATURE_SIZE    = Nether Curvature Size
+option.END_CURVATURE            = End Curvature
 option.END_CURVATURE_SIZE       = End Curvature Size
 
 value.CURVATURE_MODE.CURVATURE_MODE_SQUARED_DISTANCE = Squared Distance
@@ -178,10 +185,6 @@ option.HANDHELD_LIGHTING               = Handheld Lighting
 option.HANDHELD_LIGHTING.comment       = Handheld items cast light on the world. If coloured lighting is enabled the handheld lighting will be coloured like the lights themselves
 option.HANDHELD_LIGHTING_INTENSITY     = Handheld Lighting Intensity
 option.HANDHELD_LIGHTING_INTENSITY.comment = Adjusts the brightness of handheld light sources
-option.GTAO                            = Shader AO
-option.GTAO.comment                    = Ground-truth based ambient occlusion (GTAO). Adds soft shadows in corners
-option.VANILLA_AO                      = Vanilla AO
-option.VANILLA_AO.comment              = Minecraft's built-in ambient occlusion
 option.AO_IN_SUNLIGHT                  = AO in Sunlight
 option.AO_IN_SUNLIGHT.comment          = Whether to apply shader ambient occlusion in direct sunlight/moonlight
 option.CLOUD_SHADOWS                   = Cloud Shadows
@@ -207,8 +210,10 @@ option.SHADOW_COLOR.comment            = Translucent blocks cast tinted shadows
 option.SHADOW_VPS                      = Variable Penumbra Shadows
 option.SHADOW_VPS.comment              = Shadows grow softer further from their caster
 option.shadowMapResolution             = Shadow Resolution
+suffix.shadowMapResolution             = ²
 option.shadowDistance                  = Shadow Distance
 option.sunPathRotation                 = Sun Path Rotation
+suffix.sunPathRotation                 = °
 option.SHADOW_PENUMBRA_SCALE           = Shadow Softness
 option.SHADOW_PENUMBRA_SCALE.comment   = Adjust the softness of shadows
 option.ENTITY_SHADOWS                  = Entity Shadows
@@ -219,6 +224,24 @@ option.PIXELATED_SHADOWS.comment       = Shadows snap to block texels, creating 
 option.PIXELATED_SHADOWS_RESOLUTION    = Pixelated Shadows Resolution
 option.SHADOW_DEPTH_SCALE              = Shadow Depth Scale
 option.SHADOW_DISTORTION               = Shadow Distortion
+
+option.SHADER_AO                       = Shader AO
+option.SHADER_AO.comment               = AO method used. Off - no shader AO. SSAO - lower quality but requires fewer samples/less filtering. GTAO - better quality but requires more samples/filtering
+value.SHADER_AO.SHADER_AO_NONE         = Off
+value.SHADER_AO.SHADER_AO_SSAO         = SSAO
+value.SHADER_AO.SHADER_AO_GTAO         = GTAO
+option.VANILLA_AO                      = Vanilla AO
+option.VANILLA_AO.comment              = Minecraft's built-in ambient occlusion
+option.SSAO_RADIUS                     = SSAO Radius
+comment.SSAO_RADIUS                    = Adjusts the radius of SSAO - distance which objects can occlude each otherdistance which objects can occlude each other
+option.SSAO_STEPS                      = SSAO Steps
+comment.SSAO_STEPS                     = Controls how noisy the SSAO appears
+option.GTAO_RADIUS                     = GTAO Radius
+comment.GTAO_RADIUS                    = Adjusts the radius of SSAO - distance which objects can occlude each otherdistance which objects can occlude each other
+option.GTAO_SLICES                     = GTAO Slices
+comment.GTAO_SLICES                    = Controls how noisy the GTAO appears
+option.GTAO_HORIZON_STEPS              = GTAO Horizon Steps
+comment.GTAO_HORIZON_STEPS             = Controls the accuracy of GTAO
 
 option.SUN_NR                          = Red
 option.SUN_NG                          = Green
@@ -274,12 +297,9 @@ option.COLOREDLIGHT_SATURATION         = Colored Light Saturation
 option.GLOWING_FLOWERS                 = §e🌷§r Glowing Flowers
 option.GLOWING_ORE                     = §e⛏§r Glowing Ore
 option.END_COLORED_LIGHTING            = End Violet Lighting Blocks
-comment.END_COLORED_LIGHTING           = Fire, lava and torch blocks id's is violet in the End.
+option.END_COLORED_LIGHTING.comment           = Fire, lava and torch blocks id's is violet in the End.
 option.SCULK_I                         = Sculk Light Intensity
 option.COLORED_CANDLES                 = Colored Candles
-
-suffix.shadowMapResolution             = ²
-suffix.sunPathRotation                 = °
 
 value.shadowDistance.8.0               = 8 blocks
 value.shadowDistance.16.0              = 1 chunk
@@ -305,6 +325,8 @@ value.shadowDistance.768.0             = 48 chunks
 value.shadowDistance.1024.0            = 64 chunks
 value.shadowDistance.1280.0            = 80 chunks
 value.shadowDistance.1536.0            = 96 chunks
+value.shadowDistance.2048.0            = 128 chunks
+value.shadowDistance.4096.0            = 256 chunks
 
 # Sky settings
 
@@ -313,12 +335,13 @@ option.MOON_TYPE                       = Moon Type
 option.SUN_ANGULAR_RADIUS              = Sun Angular Radius
 option.MOON_ANGULAR_RADIUS             = Moon Angular Radius
 option.SUN_LUMINANCE                   = Sun Disk Luminance
+option.MOON_LUMINANCE                  = Moon Disk Luminance
 option.SKY_GROUND                      = Sky Ground
 option.SKY_GROUND.comment              = Visible planet surface below the horizon
 option.ATMOSPHERE_SATURATION_BOOST     = Atmosphere Saturation Boost
-comment.ATMOSPHERE_SATURATION_BOOST    = Increases the saturation of the sky and sunlight color depending on the time of day
+option.ATMOSPHERE_SATURATION_BOOST.comment = Increases the saturation of the sky and sunlight color depending on the time of day
 option.ATMOSPHERE_SATURATION_BOOST_INTENSITY = Atmosphere Saturation Boost Intensity
-comment.ATMOSPHERE_SATURATION_BOOST_INTENSITY = Adjust the intensity of Atmosphere Saturation Boost
+option.ATMOSPHERE_SATURATION_BOOST_INTENSITY.comment = Adjust the intensity of Atmosphere Saturation Boost
 option.STARS                           = Stars
 option.STARS.comment                   = Stars in the night sky. Low performance impact
 option.STARS_INTENSITY                 = Stars Intensity
@@ -484,6 +507,8 @@ suffix.CLOUDS_CUMULONIMBUS_DISTANCE              = m
 option.CLOUDS_CUMULONIMBUS_END_DISTANCE          = End Distance
 suffix.CLOUDS_CUMULONIMBUS_END_DISTANCE          = m
 
+option.CLOUDS_NOCTILUCENT              = Noctilucent Clouds
+
 option.BLOCKY_CLOUDS                   = Blocky Clouds
 option.BLOCKY_CLOUDS.comment           = Vanilla-styled volumetric clouds. Enabling this option disables all other cloud types
 option.BLOCKY_CLOUDS_LAYER_2           = Second Layer
@@ -534,7 +559,10 @@ option.CLOUDS_CIRROCUMULUS_SIZE            = Cirrocumulus Size
 option.CLOUDS_CIRROCUMULUS_DETAIL_STRENGTH = Cirrocumulus Detail Strength
 option.CLOUDS_CIRROCUMULUS_CURL_STRENGTH   = Cirrocumulus Curl Strength
 
-option.CLOUDS_ROUGHNESS                    = Clouds Roughness
+option.CLOUDS_NOCTILUCENT_INTENSITY    = Intensity
+option.CLOUDS_NOCTILUCENT_RARITY       = Rarity
+
+option.CLOUDS_ROUGHNESS                = Clouds Roughness
 
 option.AURORA_TYPE                     = Aurora Style
 option.AURORA_COLOR                    = Aurora Color
@@ -817,6 +845,7 @@ option.DIRECTIONAL_LIGHTMAPS_INTENSITY = Directional Lightmaps Strength
 option.DIRECTIONAL_LIGHTMAPS_INTENSITY.comment = Adjusts the intensity of Directional Lightmaps
 option.POM_DEPTH                       = Parallax Depth
 option.POM_DEPTH.comment               = How far POM can recess into a block
+suffix.POM_DEPTH                       = m
 option.POM_SAMPLES                     = Parallax Samples
 option.POM_SAMPLES.comment             = Adjusts the quality of POM, at the expense of performance
 option.POM_SHADOW                      = POM Self-Shadowing
@@ -825,9 +854,13 @@ option.POM_SHADOW_SAMPLES              = POM Self-Shadow Samples
 option.POM_SHADOW_SAMPLES.comment      = Adjusts the quality of Parallax Shadows, at the expense of performance
 option.POM_SLOPE_NORMALS               = POM Slope Normals
 option.POM_DISTANCE                    = POM Distance
-
-suffix.POM_DEPTH                       = m
 suffix.POM_DISTANCE                    = m
+option.REFRACTION                      = Refraction
+value.REFRACTION.REFRACTION_OFF        = Off
+value.REFRACTION.REFRACTION_ALL        = Everything
+value.REFRACTION.REFRACTION_WATER_ONLY = Water Only
+option.REFRACTION_INTENSITY            = Refraction Intensity
+option.REFRACTION_INTENSITY.comment    = Adjusts the intensity of refractions on water
 
 value.TEXTURE_FORMAT.TEXTURE_FORMAT_LAB = labPBR
 value.TEXTURE_FORMAT.TEXTURE_FORMAT_OLD = Old PBR
@@ -850,7 +883,6 @@ option.SSR_REFINEMENT_STEPS            = Refinement Steps
 option.SSR_REFINEMENT_STEPS.comment    = Adjusts the accuracy of all reflections, at the expense of performance
 option.SSR_ROUGHNESS_THRESHOLD         = Roughness Threshold
 option.SSR_ROUGHNESS_THRESHOLD.comment = Adjusts how smooth a surface must be for reflections to appear
-option.SSR_PREVIOUS_FRAME.comment      = Use previous frame data for reflections, so that translucents and reflections appear in reflections
 
 # Water settings
 
@@ -871,13 +903,9 @@ option.BIOME_WATER_COLOR.comment          = Water absorption takes the biome wat
 option.BIOME_WATER_COLOR_INTENSITY        = Biome-Colored Water Intensity
 option.WATER_TEXTURE_HIGHLIGHT_INTENSITY  = Water Highlights Intensity
 option.WATER_TEXTURE_HIGHLIGHT_UNDERGROUND_INTENSITY = Water Highlights Underground Intensity
-comment.WATER_TEXTURE_HIGHLIGHT_UNDERGROUND_INTENSITY = Not affected by Water Highlights Intensity.
+option.WATER_TEXTURE_HIGHLIGHT_UNDERGROUND_INTENSITY.comment = Not affected by Water Highlights Intensity.
 option.WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR = Biome-Colored Water Highlights
 option.WATER_TEXTURE_HIGHLIGHT_BIOME_COLOR_INTENSITY = Biome-Colored Water Highlights Intensity
-option.WATER_REFRACTION                   = Water Refraction
-option.WATER_REFRECTION.comment           = Refraction behind water. Very small performance impact
-option.WATER_REFRACTION_INTENSITY         = Water Refraction Intensity
-option.WATER_REFRACTION_INTENSITY.comment = Adjusts the intensity of refractions on water
 
 value.WATER_TEXTURE.WATER_TEXTURE_OFF                   = Off
 value.WATER_TEXTURE.WATER_TEXTURE_HIGHLIGHT             = Highlights
@@ -893,6 +921,7 @@ option.WATER_WAVE_SPEED_FLOWING        = Speed (Flowing)
 option.WATER_WAVE_PERSISTENCE          = Persistence
 option.WATER_WAVE_LACUNARITY           = Lacunarity
 option.WATER_WAVE_ANGLE                = Angle
+suffix.WATER_WAVE_ANGLE                = °
 option.WATER_NOISE_FREQUENCY           = Noise Frequency
 option.WATER_NOISE_STRENGTH            = Noise Strength
 option.WATER_NOISE_FADE                = Noise Fade
@@ -901,7 +930,7 @@ option.WATER_PARALLAX.comment          = Makes water waves appear 3D
 option.WATER_DISPLACEMENT              = Water Displacement
 option.WATER_DISPLACEMENT.comment      = Similar to how waving leaves work, it makes the water geometry itself wave slightly, so the shore line appears less flat
 option.WATER_WAVES_HEIGHT_VARIATION    = Water Waves Height Variation
-comment.WATER_WAVES_HEIGHT_VARIATION   = The height of water waves varies in space
+option.WATER_WAVES_HEIGHT_VARIATION.comment   = The height of water waves varies in space
 
 option.WATER_ABSORPTION_R              = Red Absorption
 option.WATER_ABSORPTION_G              = Green Absorption
@@ -912,8 +941,6 @@ option.WATER_ABSORPTION_R_UNDERWATER   = Red Absorption - Underwater
 option.WATER_ABSORPTION_G_UNDERWATER   = Green Absorption - Underwater
 option.WATER_ABSORPTION_B_UNDERWATER   = Blue Absorption - Underwater
 option.WATER_SCATTERING_UNDERWATER     = Scattering - Underwater
-
-suffix.WATER_WAVE_ANGLE                = °
 
 # Post-processing settings
 
@@ -939,8 +966,11 @@ option.DOF_CA_R_OFFSET                 = Red Offset
 option.DOF_CA_G_OFFSET                 = Green Offset
 option.DOF_CA_B_OFFSET                 = Blue Offset
 option.DOF_CA_R_ANGLE                  = Red Angle
+suffix.DOF_CA_R_ANGLE                  = °
 option.DOF_CA_G_ANGLE                  = Green Angle
+suffix.DOF_CA_G_ANGLE                  = °
 option.DOF_CA_B_ANGLE                  = Blue Angle
+suffix.DOF_CA_B_ANGLE                  = °
 option.MOTION_BLUR                     = Motion Blur
 option.MOTION_BLUR.comment             = Cinematic blur in motion, also useful to smoothen low framerates but can cause motion sickness
 option.MOTION_BLUR_INTENSITY           = Motion Blur Intensity
@@ -963,10 +993,6 @@ option.VIGNETTE_INTENSITY              = Vignette Intensity
 option.VIGNETTE_INTENSITY.comment      = Adjusts the intensity of Vignette
 
 value.DOF_FOCUS.-1.0                   = Automatic
-
-suffix.DOF_CA_R_ANGLE                  = °
-suffix.DOF_CA_G_ANGLE                  = °
-suffix.DOF_CA_B_ANGLE                  = °
 
 option.tonemap                         = Tonemap Operator
 
@@ -1002,11 +1028,11 @@ option.GRADE_SATURATION                = Saturation
 option.GRADE_VIBRANCE                  = Vibrance
 option.GRADE_GAIN                      = Gain
 option.GRADE_WHITE_BALANCE             = White Balance
+suffix.GRADE_WHITE_BALANCE             = K
 option.GRADE_ORANGE_SAT_BOOST          = Orange Saturation Boost
 option.GRADE_TEAL_SAT_BOOST            = Teal Saturation Boost
 option.GRADE_GREEN_SAT_BOOST           = Green Saturation Boost
 option.GRADE_GREEN_HUE_SHIFT           = Green Hue Shift
-suffix.GRADE_WHITE_BALANCE             = K
 suffix.GRADE_GREEN_HUE_SHIFT           = °
 
 option.PURKINJE_SHIFT                  = Purkinje Shift
@@ -1243,6 +1269,10 @@ option.CUSTOM_SKY_BRIGHTNESS           = Custom Sky Brightness
 option.CUSTOM_SKY_BRIGHTNESS.comment   = Adjust custom sky brightness
 option.DAYLIGHT_CYCLE                  = Daylight Cycle Enabled
 option.DAYLIGHT_CYCLE.comment          = Disable when the gamerule doDaylightCycle is false to prevent cloud trailing when changing the time
+option.ENCHANTMENT_GLINT_BRIGHTNESS    = Enchantment Glint Brightness
+option.ENCHANTMENT_GLINT_R             = Enchantment Glint Red
+option.ENCHANTMENT_GLINT_G             = Enchantment Glint Green
+option.ENCHANTMENT_GLINT_B             = Enchantment Glint Blue
 
 value.DEBUG_VIEW.DEBUG_VIEW_NONE       = OFF
 value.DEBUG_VIEW.DEBUG_VIEW_SAMPLER    = Sampler
