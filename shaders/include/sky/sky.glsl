@@ -59,7 +59,7 @@ vec3 draw_stars(vec3 ray_dir, float galaxy_luminance) {
 }
 
 //----------------------------------------------------------------------------//
-#if   defined WORLD_OVERWORLD
+#if defined WORLD_OVERWORLD
 
 #include "/include/lighting/colors/light_color.glsl"
 #include "/include/lighting/colors/weather_color.glsl"
@@ -84,7 +84,46 @@ vec3 draw_sun(vec3 ray_dir) {
 	return sun_luminance * sun_color * step(0.0, center_to_edge) * limb_darkening;
 }
 
-#ifdef GALAXY
+#if defined GALAXY
+
+#if defined GALAXY_GAMS
+	//#if !defined PROGRAM_DEFERRED0
+
+// Galaxy from old Photon-GAMS
+
+vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
+	//const float galaxy_intensity = GALAXY_INTENSITY;
+	const vec3 galaxy_tint = vec3(GALAXY_TINT_R, GALAXY_TINT_G, GALAXY_TINT_B) * GALAXY_INTENSITY;
+	// Check if it's night time
+	if (sun_dir.y > -0.05) return vec3(0.0); // Return black if it's not night
+	mat3 rot = (sunAngle < 0.5)
+	? mat3(shadowModelViewInverse)
+	: mat3(-shadowModelViewInverse[0].xyz, shadowModelViewInverse[1].xyz, -shadowModelViewInverse[2].xyz);
+	ray_dir *= rot;
+	// Convert ray direction to spherical coordinates
+	float phi = atan(ray_dir.y, ray_dir.x);
+	float theta = acos(ray_dir.z);
+	// Map spherical coordinates to UV coordinates
+	vec2 uv = vec2(phi / (2.0 * pi) + 0.5, theta / pi);
+
+	vec3 galaxy = from_srgb(texture(colortex14, uv).rgb);
+
+	// Fade in/out at twilight
+	float night_factor = smoothstep(0.0, -0.1, sun_dir.y);
+
+	return galaxy * galaxy_tint * night_factor;
+}
+
+	//#else
+		//vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
+		//return vec3(0.0);
+		//}
+	//#endif
+
+#else
+
+// GALAXY from Photon
+
 vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
 	const vec3 galaxy_tint = vec3(GALAXY_TINT_R, GALAXY_TINT_G, GALAXY_TINT_B) * GALAXY_INTENSITY;
 
@@ -100,7 +139,7 @@ vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
 
 	galaxy = srgb_eotf_inv(galaxy) * rec709_to_working_color;
 
-	galaxy *= galaxy_intensity * galaxy_tint;
+	galaxy *= 2 * galaxy_intensity * galaxy_tint;
 
 	galaxy_luminance = dot(galaxy, luminance_weights_rec709);
 
@@ -112,10 +151,30 @@ vec3 draw_galaxy(vec3 ray_dir, out float galaxy_luminance) {
 
 	return max0(galaxy);
 }
+#endif
 
 #endif
+
+vec3 adjust_night_atmosphere(vec3 atmosphere, vec3 ray_dir) {
+	#ifdef BLACK_NIGHT_SKY
+	float night_factor = smoothstep(0.1, -0.1, sun_dir.y);
+	float height_fade = smoothstep(-0.1, 0.3, ray_dir.y);
+
+	float blue_hour = linear_step(0.05, 1.0, exp(-190.0 * sqr(sun_dir.y + 0.09604)));
+	vec3 blue_hour_tint = vec3(0.95, 0.80, 1.0);
+	vec3 blue_hour_sky = mix(atmosphere, atmosphere * blue_hour_tint, blue_hour);
+
+	vec3 night_sky = mix(atmosphere * 0.1, vec3(0.0), height_fade);
+	vec3 blended_sky = mix(blue_hour_sky, night_sky, night_factor);
+
+	return mix(atmosphere, blended_sky, smoothstep(0.2, -0.2, sun_dir.y));
+	#else
+	return atmosphere;
+	#endif
+}
+
 vec4 get_clouds_and_aurora(vec3 ray_dir, vec3 clear_sky) {
-#if   defined PROGRAM_DEFERRED0
+#if defined PROGRAM_DEFERRED0
 	ivec2 texel   = ivec2(gl_FragCoord.xy);
 	      texel.x = texel.x % (sky_map_res.x - 4);
 
@@ -164,6 +223,9 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 	// Sun, moon and stars
 
 #if defined PROGRAM_DEFERRED4
+	/*vec4 vanilla_sky = texelFetch(colortex0, ivec2(gl_FragCoord.xy), 0);
+	vec3 vanilla_sky_color = from_srgb(vanilla_sky.rgb);
+	uint vanilla_sky_id = uint(255.0 * vanilla_sky.a);*/
 	// Output of skytextured
 	sky += texelFetch(colortex0, ivec2(gl_FragCoord.xy), 0).rgb;
 
@@ -176,9 +238,11 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 	// Sun
 	sky += draw_sun(ray_dir);
 #endif
+
 #endif
 
 	// Sky gradient
+	atmosphere = adjust_night_atmosphere(atmosphere, ray_dir);
 	sky *= atmosphere_transmittance(ray_dir.y, planet_radius) * (1.0 - rainStrength);
 	sky += atmosphere;
 
@@ -208,6 +272,7 @@ vec3 draw_sky(vec3 ray_dir, vec3 atmosphere) {
 }
 
 vec3 draw_sky(vec3 ray_dir) {
+	
 	vec3 atmosphere = atmosphere_scattering(ray_dir, sun_color, sun_dir, moon_color, moon_dir, true);
 	return draw_sky(ray_dir, atmosphere);
 }
@@ -264,6 +329,7 @@ vec3 draw_sun(vec3 ray_dir) {
 }
 
 vec3 draw_sky(vec3 ray_dir) {
+
 	// Sky gradient
 
 	float up_gradient = linear_step(0.0, 0.4, ray_dir.y) + linear_step(0.1, 0.8, -ray_dir.y);
