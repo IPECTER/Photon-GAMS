@@ -25,8 +25,14 @@ flat in vec3 sun_color;
 flat in vec3 moon_color;
 flat in vec3 sky_color;
 
-#include "/include/misc/weather_struct.glsl"
-flat in DailyWeatherVariation daily_weather_variation;
+flat in float aurora_amount;
+flat in mat2x3 aurora_colors;
+
+#include "/include/sky/clouds/parameters.glsl"
+flat in CloudsParameters clouds_params;
+
+#include "/include/fog/overworld/parameters.glsl"
+flat in OverworldFogParameters fog_params;
 #endif
 
 // ------------
@@ -34,11 +40,13 @@ flat in DailyWeatherVariation daily_weather_variation;
 // ------------
 
 uniform sampler3D colortex6; // 3D worley noise
+#define SAMPLER_WORLEY_BUBBLY colortex6
 uniform sampler3D colortex7; // 3D curl noise
+#define SAMPLER_WORLEY_SWIRLEY colortex7
 
 #if defined WORLD_OVERWORLD && defined GALAXY
-uniform sampler2D colortex14;
-#define galaxy_sampler colortex14
+uniform sampler2D colortex13;
+#define galaxy_sampler colortex13
 #endif
 
 uniform sampler3D depthtex0; // atmospheric scattering LUT
@@ -99,6 +107,7 @@ uniform float biome_may_snow;
 #define ATMOSPHERE_SCATTERING_LUT depthtex0
 
 #if defined WORLD_OVERWORLD
+#include "/include/fog/overworld/analytic.glsl"
 #include "/include/sky/aurora.glsl"
 #include "/include/sky/clouds.glsl"
 #endif
@@ -124,6 +133,17 @@ void main() {
 		vec3 ray_dir = unproject_sky(uv);
 
 		sky_map = draw_sky(ray_dir);
+
+#if defined WORLD_OVERWORLD
+		// Apply analytic fog over sky
+		mat2x3 fog = air_fog_analytic(
+			cameraPosition,
+			cameraPosition + ray_dir,
+			true,
+			eye_skylight
+		);
+		sky_map = sky_map * fog[1] + fog[0];
+#endif
 	}
 }
 

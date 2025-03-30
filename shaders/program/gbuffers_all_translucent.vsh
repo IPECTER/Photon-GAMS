@@ -30,6 +30,11 @@ flat out vec2 atlas_tile_offset;
 flat out vec2 atlas_tile_scale;
 #endif
 
+#if defined WORLD_OVERWORLD
+#include "/include/fog/overworld/parameters.glsl"
+flat out OverworldFogParameters fog_params;
+#endif
+
 // --------------
 //   Attributes
 // --------------
@@ -45,6 +50,7 @@ attribute vec2 mc_midTexCoord;
 uniform sampler2D noisetex;
 
 uniform sampler2D colortex4; // Sky map, lighting colors
+uniform sampler2D colortex9; // Sky SH
 
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
@@ -57,17 +63,44 @@ uniform float near;
 uniform float far;
 
 uniform ivec2 atlasSize;
-
-uniform int frameCounter;
 uniform int renderStage;
+
+uniform int worldTime;
+uniform int worldDay;
+uniform int frameCounter;
 uniform float frameTimeCounter;
+
+uniform float sunAngle;
 uniform float rainStrength;
+uniform float wetness;
 
 uniform vec2 view_res;
 uniform vec2 view_pixel_size;
 uniform vec2 taa_offset;
 
 uniform vec3 light_dir;
+uniform vec3 sun_dir;
+
+uniform float eye_skylight;
+
+uniform float biome_temperate;
+uniform float biome_arid;
+uniform float biome_snowy;
+uniform float biome_taiga;
+uniform float biome_jungle;
+uniform float biome_swamp;
+uniform float biome_may_rain;
+uniform float biome_may_snow;
+uniform float biome_temperature;
+uniform float biome_humidity;
+
+uniform float world_age;
+uniform float time_sunrise;
+uniform float time_noon;
+uniform float time_sunset;
+uniform float time_midnight;
+
+uniform float desert_sandstorm;
 
 #if defined PROGRAM_GBUFFERS_ENTITIES_TRANSLUCENT
 uniform int entityId;
@@ -89,6 +122,10 @@ uniform int currentRenderedItemId;
 #include "/include/vertex/displacement.glsl"
 #include "/include/vertex/utility.glsl"
 
+#if defined WORLD_OVERWORLD
+#include "/include/misc/weather.glsl"
+#endif
+
 void main() {
 	uv            = mat2(gl_TextureMatrix[0]) * gl_MultiTexCoord0.xy + gl_TextureMatrix[0][3].xy;
 	light_levels  = clamp01(gl_MultiTexCoord1.xy * rcp(240.0));
@@ -98,7 +135,11 @@ void main() {
 
 	int lighting_color_x = SKY_MAP_LIGHT_X;
 	light_color   = texelFetch(colortex4, ivec2(lighting_color_x, 0), 0).rgb;
+#if defined WORLD_OVERWORLD && defined SH_SKYLIGHT
+	ambient_color = texelFetch(colortex9, ivec2(9, 0), 0).rgb;
+#else	
 	ambient_color = texelFetch(colortex4, ivec2(lighting_color_x, 1), 0).rgb;
+#endif
 
 	bool is_top_vertex = uv.y < mc_midTexCoord.y;
 
@@ -150,9 +191,17 @@ void main() {
 	if (gl_Color.r > gl_Color.g && gl_Color.g < 0.6 && gl_Color.b > 0.4) material_mask = 47;
 #endif
 
+#if defined PROGRAM_GBUFFERS_ENTITIES_TRANSLUCENT
+ 	if (material_mask == 102) material_mask = 80;
+ #endif
+
 #if defined PROGRAM_GBUFFERS_WATER
 	// Fix issue where the normal of the bottom of the water surface is flipped
 	if (dot(position_scene, tbn[2]) > 0.0) tbn[2] = -tbn[2];
+#endif
+
+#if defined WORLD_OVERWORLD
+	fog_params = get_fog_parameters(get_weather());
 #endif
 
 	position_view = scene_to_view_space(position_scene);
@@ -167,4 +216,3 @@ void main() {
 
 	gl_Position = position_clip;
 }
-

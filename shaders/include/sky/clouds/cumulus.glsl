@@ -5,14 +5,11 @@
 
 #include "common.glsl"
 
-const float clouds_cumulus_radius      = planet_radius + CLOUDS_CUMULUS_ALTITUDE;
-const float clouds_cumulus_thickness   = CLOUDS_CUMULUS_ALTITUDE * CLOUDS_CUMULUS_THICKNESS;
-const float clouds_cumulus_top_radius  = clouds_cumulus_radius + clouds_cumulus_thickness;
-
 // altitude_fraction := 0 at the bottom of the cloud layer and 1 at the top
 float clouds_cumulus_altitude_shaping(float density, float altitude_fraction) {
 	// Carve egg shape
-	density -= smoothstep(0.2, 1.0, altitude_fraction) * 0.6;
+	density -= smoothstep(0.2, 1.0, altitude_fraction)
+	* (0.6 - 0.3 * clouds_params.l0_cumulus_stratus_blend);
 
 	// Reduce density at the bottom of the cloud
 	density *= smoothstep(0.0, 0.2, altitude_fraction);
@@ -20,61 +17,84 @@ float clouds_cumulus_altitude_shaping(float density, float altitude_fraction) {
 	return density;
 }
 
-float clouds_cumulus_density(vec3 pos, vec2 detail_weights, vec2 edge_sharpening, float dynamic_thickness) {
+float clouds_cumulus_density(vec3 pos) {
 	const float wind_angle = CLOUDS_CUMULUS_WIND_ANGLE * degree;
 	const vec2 wind_velocity = CLOUDS_CUMULUS_WIND_SPEED * vec2(cos(wind_angle), sin(wind_angle));
 
 	float r = length(pos);
 	if (r < clouds_cumulus_radius || r > clouds_cumulus_top_radius) return 0.0;
 
-	float altitude_fraction = 0.8 * (r - clouds_cumulus_radius) * rcp(clouds_cumulus_thickness * dynamic_thickness);
+	float altitude_fraction = (r - clouds_cumulus_radius) * clouds_params.l0_altitude_scale;
 
 	pos.xz += cameraPosition.xz * CLOUDS_SCALE + wind_velocity * world_age;
 
 	// 2D noise for base shape and coverage
+	vec2 p1 = (0.000002 / CLOUDS_CUMULUS_SIZE) * pos.xz;
+	vec2 p2 = (0.000027 / CLOUDS_CUMULUS_SIZE) * pos.xz;
 	vec2 noise = vec2(
-		texture(noisetex, (0.000002 / CLOUDS_CUMULUS_SIZE) * pos.xz).x, // cloud coverage
-		texture(noisetex, (0.000027 / CLOUDS_CUMULUS_SIZE) * pos.xz).w  // cloud shape
+		texture(noisetex, p1).x, // cloud coverage
+		texture(noisetex, p2).w  // cloud shape
 	);
 
-	float density_cu = mix(
-		daily_weather_variation.clouds_cumulus_coverage.x, 
-		daily_weather_variation.clouds_cumulus_coverage.y, 
-		noise.x
+	float density_cu = 0.0, density_st = 0.0;
+
+	if (clouds_params.l0_cumulus_stratus_blend < 1.0 - eps) {
+		density_cu = mix(clouds_params.l0_coverage.x, clouds_params.l0_coverage.y, noise.x);
+		density_cu = linear_step(1.0 - density_cu, 1.0, noise.y);
+	}
+
+	if (clouds_params.l0_cumulus_stratus_blend > eps) {
+		density_st = cubic_smooth(
+			linear_step(
+				0.9 - clouds_params.l0_coverage.x,
+				1.0,
+				2.0 * noise.x * clouds_params.l0_coverage.y
+			)
+		);
+		density_st = 0.5 * density_st + 1.0 * density_st * linear_step(0.3, 0.6, noise.y);
+		density_st = density_st / (density_st + 1.0);
+		density_st = clamp01(
+			density_st * dampen(clamp01(2.0 * altitude_fraction)
+				* linear_step(0.0, 0.1, altitude_fraction)
+				* linear_step(0.0, 0.6, 1.0 - altitude_fraction))
+		);
+	}
+
+	float density = clouds_cumulus_altitude_shaping(
+		mix(density_cu, density_st, clouds_params.l0_cumulus_stratus_blend),
+		altitude_fraction
 	);
-	density_cu = linear_step(1.0 - density_cu, 1.0, noise.y);
-
-	float density_st = linear_step(0.30, 0.70, noise.x) * linear_step(0.10, 0.90, noise.y);
-
-	float density = mix(density_cu, density_st, daily_weather_variation.clouds_stratus_amount);
-	density = clouds_cumulus_altitude_shaping(density, altitude_fraction);
-	density -= density * linear_step(0.0, 0.5, daily_weather_variation.clouds_cumulus_congestus_amount);
 
 	if (density < eps) return 0.0;
 
 #ifndef PROGRAM_PREPARE
-	// Curl noise used to warp the 3D noise into swirling shapes
-	vec3 curl = (0.181 * CLOUDS_CUMULUS_CURL_STRENGTH) * texture(colortex7, 0.002 * pos).xyz * smoothstep(0.4, 1.0, 1.0 - altitude_fraction);
 	vec3 wind = vec3(wind_velocity * world_age, 0.0).xzy;
 
 	// 3D worley noise for detail
-	float worley_0 = texture(colortex6, (pos + 0.2 * wind) * 0.001 + curl * 1.0).x;
-	float worley_1 = texture(colortex6, (pos + 0.4 * wind) * 0.005 + curl * 3.0).x;
+	float worley_0 = texture(SAMPLER_WORLEY_BUBBLY, (pos + 0.2 * wind) * 0.0009).x;
+	float worley_1 = texture(SAMPLER_WORLEY_SWIRLEY, (pos + 0.4 * wind) * 0.005).x;
 #else
 	const float worley_0 = 0.5;
 	const float worley_1 = 0.5;
-#endif
+#endif // PROGRAM_PREPARE
 
 	float detail_fade = 0.20 * smoothstep(0.85, 1.0, 1.0 - altitude_fraction)
 	                  - 0.35 * smoothstep(0.05, 0.5, altitude_fraction) + 0.6;
 
-	density -= detail_weights.x * sqr(worley_0) * dampen(clamp01(1.0 - density));
-	density -= detail_weights.y * sqr(worley_1) * dampen(clamp01(1.0 - density)) * detail_fade;
+	density -= clouds_params.l0_detail_weights.x * sqr(worley_0) * dampen(clamp01(1.0 - density));
+	density -= clouds_params.l0_detail_weights.y * sqr(worley_1) * dampen(clamp01(1.0 - density)) * detail_fade;
 
 	// Adjust density so that the clouds are wispy at the bottom and hard at the top
-	density  = max0(density);
-	density  = 1.0 - pow(1.0 - density, mix(edge_sharpening.x, edge_sharpening.y, altitude_fraction));
-	density *= CLOUDS_ROUGHNESS + 0.9 * smoothstep(0.2, 0.7, altitude_fraction);
+	density = max0(density);
+	density = 1.0 - pow(
+		1.0 - density,
+		mix(
+			clouds_params.l0_edge_sharpening.x,
+			clouds_params.l0_edge_sharpening.y,
+			altitude_fraction
+		)
+	);
+	density *= 0.1 + 0.9 * smoothstep(0.2, 0.7, altitude_fraction);
 
 	return density;
 }
@@ -82,9 +102,6 @@ float clouds_cumulus_density(vec3 pos, vec2 detail_weights, vec2 edge_sharpening
 float clouds_cumulus_optical_depth(
 	vec3 ray_origin,
 	vec3 ray_dir,
-	vec2 detail_weights,
-	vec2 edge_sharpening,
-	float dynamic_thickness,
 	float dither,
 	const uint step_count
 ) {
@@ -99,7 +116,7 @@ float clouds_cumulus_optical_depth(
 
 	for (uint i = 0u; i < step_count; ++i, ray_pos += ray_step.xyz) {
 		ray_step *= step_growth;
-		optical_depth += clouds_cumulus_density(ray_pos + ray_step.xyz * dither, detail_weights, edge_sharpening, dynamic_thickness) * ray_step.w;
+		optical_depth += clouds_cumulus_density(ray_pos + ray_step.xyz * dither) * ray_step.w;
 	}
 
 	return optical_depth;
@@ -110,32 +127,29 @@ vec2 clouds_cumulus_scattering(
 	float light_optical_depth,
 	float sky_optical_depth,
 	float ground_optical_depth,
-	float extinction_coeff,
-	float scattering_coeff,
 	float step_transmittance,
 	float cos_theta,
-	float altocumulus_shadow,
 	float bounced_light
 ) {
 	vec2 scattering = vec2(0.0);
 
-	float scatter_amount = scattering_coeff;
-	float extinct_amount = extinction_coeff;
+	float scatter_amount = clouds_params.l0_scattering_coeff;
+	float extinct_amount = clouds_params.l0_extinction_coeff;
 
-	float scattering_integral_times_density = (1.0 - step_transmittance) / extinction_coeff;
+	float scattering_integral_times_density = (1.0 - step_transmittance) / clouds_params.l0_extinction_coeff;
 
-	float powder_effect = clouds_powder_effect(density + density * daily_weather_variation.clouds_stratus_amount, cos_theta);
+	float powder_effect = clouds_powder_effect(density + density * clouds_params.l0_cumulus_stratus_blend, cos_theta);
 
 	float phase = clouds_phase_single(cos_theta);
 	vec3 phase_g = pow(vec3(0.6, 0.9, 0.3), vec3(1.0 + light_optical_depth));
 
 	for (uint i = 0u; i < 8u; ++i) {
-		scattering.x += scatter_amount * exp(-extinct_amount *  light_optical_depth) * phase * (1.0 - 0.8 * altocumulus_shadow);
+		scattering.x += scatter_amount * exp(-extinct_amount *  light_optical_depth) * phase * (1.0 - 0.5 * clouds_params.l0_shadow);
 		scattering.x += scatter_amount * exp(-extinct_amount * ground_optical_depth) * isotropic_phase * bounced_light;
-		scattering.x += scatter_amount * exp(-extinct_amount *    sky_optical_depth) * isotropic_phase * altocumulus_shadow * 0.2; // fake bounced lighting from the layer above
+		scattering.x += scatter_amount * exp(-extinct_amount *    sky_optical_depth) * isotropic_phase * clouds_params.l0_shadow * 0.5; // fake bounced lighting from the layer above
 		scattering.y += scatter_amount * exp(-extinct_amount *    sky_optical_depth) * isotropic_phase;
 
-		scatter_amount *= 0.55 * mix(lift(clamp01(scattering_coeff / 0.1), 0.33), 1.0, cos_theta * 0.5 + 0.5) * powder_effect;
+		scatter_amount *= 0.55 * mix(lift(clamp01(clouds_params.l0_scattering_coeff / 0.1), 0.33), 1.0, cos_theta * 0.5 + 0.5) * powder_effect;
 		extinct_amount *= 0.4;
 		phase_g *= 0.8;
 
@@ -164,7 +178,7 @@ CloudsResult draw_cumulus_clouds(
 #else
 	const uint  primary_steps_horizon = CLOUDS_CUMULUS_PRIMARY_STEPS_H;
 	const uint  primary_steps_zenith  = CLOUDS_CUMULUS_PRIMARY_STEPS_Z;
-#endif
+#endif // PROGRAM_DEFERRED0
 	const uint  lighting_steps        = CLOUDS_CUMULUS_LIGHTING_STEPS;
 	const uint  ambient_steps         = CLOUDS_CUMULUS_AMBIENT_STEPS;
 	const float max_ray_length        = 2e4;
@@ -202,23 +216,10 @@ CloudsResult draw_cumulus_clouds(
 	//   Lighting Setup
 	// ------------------
 
-	float altocumulus_shadow = linear_step(
-		0.5, 
-		0.6, 
-		daily_weather_variation.clouds_altocumulus_coverage.x
-	) * dampen(day_factor);
-
 	bool  moonlit            = sun_dir.y < -0.04;
 	vec3  light_dir          = moonlit ? moon_dir : sun_dir;
 	float cos_theta          = dot(ray_dir, light_dir);
 	float bounced_light      = planet_albedo * light_dir.y * rcp_pi;
-
-	float extinction_coeff   = mix(0.05, 0.1, smoothstep(0.0, 0.3, abs(sun_dir.y))) * (1.0 - 0.33 * rainStrength) * (1.0 - 0.6 * altocumulus_shadow) * CLOUDS_CUMULUS_DENSITY;
-	float scattering_coeff   = extinction_coeff * mix(1.00, 1.6, rainStrength);
-
-	float dynamic_thickness  = mix(0.5, 1.0, smoothstep(0.4, 0.6, daily_weather_variation.clouds_cumulus_coverage.y));
-	vec2  detail_weights     = mix(vec2(0.33, 0.40), vec2(0.25, 0.20), sqr(daily_weather_variation.clouds_stratus_amount)) * CLOUDS_CUMULUS_DETAIL_STRENGTH;
-	vec2  edge_sharpening    = mix(vec2(3.0, 8.0), vec2(1.0, 2.0), daily_weather_variation.clouds_stratus_amount);
 
 	// --------------------
 	//   Raymarching Loop
@@ -231,7 +232,7 @@ CloudsResult draw_cumulus_clouds(
 
 		float altitude_fraction = (length(ray_pos) - clouds_cumulus_radius) * rcp(clouds_cumulus_thickness);
 
-		float density = clouds_cumulus_density(ray_pos, detail_weights, edge_sharpening, dynamic_thickness);
+		float density = clouds_cumulus_density(ray_pos);
 
 		if (density < eps) continue;
 
@@ -241,29 +242,31 @@ CloudsResult draw_cumulus_clouds(
 
 		density *= 1.0 - distance_fade;
 
-		float step_optical_depth = density * extinction_coeff * step_length;
+		float step_optical_depth = density * clouds_params.l0_extinction_coeff * step_length;
 		float step_transmittance = exp(-step_optical_depth);
 
 #if defined PROGRAM_DEFERRED0
 		vec2 hash = vec2(0.0);
 #else
 		vec2 hash = hash2(fract(ray_pos)); // used to dither the light rays
-#endif
+#endif // PROGRAM_DEFERRED0
 
-		float light_optical_depth  = clouds_cumulus_optical_depth(ray_pos, light_dir, detail_weights, edge_sharpening, dynamic_thickness, hash.x, lighting_steps);
-		float sky_optical_depth    = clouds_cumulus_optical_depth(ray_pos, sky_dir, detail_weights, edge_sharpening, dynamic_thickness, hash.y, ambient_steps);
-		float ground_optical_depth = mix(density, 1.0, clamp01(altitude_fraction * 2.0 - 1.0)) * altitude_fraction * clouds_cumulus_thickness; // guess optical depth to the ground using altitude fraction and density from this sample
+		float light_optical_depth  = clouds_cumulus_optical_depth(ray_pos, light_dir, hash.x, lighting_steps);
+		float sky_optical_depth    = clouds_cumulus_optical_depth(ray_pos, sky_dir, hash.y, ambient_steps);
+		// guess optical depth to the ground using altitude fraction and density from this sample
+		float ground_optical_depth = mix(
+			density,
+			1.0,
+			clamp01(altitude_fraction * 2.0 - 1.0)
+		) * altitude_fraction * clouds_cumulus_thickness;
 
 		scattering += clouds_cumulus_scattering(
 			density,
 			light_optical_depth,
 			sky_optical_depth,
 			ground_optical_depth,
-			extinction_coeff,
-			scattering_coeff,
 			step_transmittance,
 			cos_theta,
-			altocumulus_shadow,
 			bounced_light
 		) * transmittance;
 
@@ -278,22 +281,22 @@ CloudsResult draw_cumulus_clouds(
 	vec3 light_color  = sunlight_color * atmosphere_transmittance(ray_origin, light_dir);
 		 light_color  = atmosphere_post_processing(light_color);
 	     light_color *= moonlit ? moon_color : sun_color;
-		 light_color *= 1.0 - rainStrength;
 
 	// Remap the transmittance so that min_transmittance is 0
 	float clouds_transmittance = linear_step(min_transmittance, 1.0, transmittance);
 
 	vec3 clouds_scattering = scattering.x * light_color + scattering.y * sky_color;
-	if (distance_to_terrain < 0.0) clouds_scattering = clouds_aerial_perspective(clouds_scattering, clouds_transmittance, air_viewer_pos, ray_origin, ray_dir, clear_sky);
-	
+	     clouds_scattering = clouds_aerial_perspective(clouds_scattering, clouds_transmittance, air_viewer_pos, ray_origin, ray_dir, clear_sky);
+
 	float apparent_distance = (distance_weight_sum == 0.0)
 		? 1e6
 		: (distance_sum / distance_weight_sum) + distance(air_viewer_pos, ray_origin);
 
 	return CloudsResult(
-		clouds_scattering,
+		vec4(clouds_scattering, scattering.y),
 		clouds_transmittance,
 		apparent_distance
 	);
 }
-#endif
+
+#endif // INCLUDE_SKY_CLOUDS_CUMULUS

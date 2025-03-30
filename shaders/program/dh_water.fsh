@@ -32,6 +32,11 @@ flat in vec2 atlas_tile_offset;
 flat in vec2 atlas_tile_scale;
 #endif
 
+#if defined WORLD_OVERWORLD
+#include "/include/fog/overworld/parameters.glsl"
+flat in OverworldFogParameters fog_params;
+#endif
+
 // ------------
 //   Uniforms
 // ------------
@@ -125,10 +130,6 @@ uniform vec4 entityColor;
 
 #ifdef SHADOW_COLOR
 	#undef SHADOW_COLOR
-#endif
-
-#ifdef SH_SKYLIGHT
-	#undef SH_SKYLIGHT
 #endif
 
 #if defined PROGRAM_GBUFFERS_TEXTURED || defined PROGRAM_GBUFFERS_PARTICLES_TRANSLUCENT
@@ -245,9 +246,11 @@ void main() {
 		scene_pos,
 		normal,
 		normal,
+		normal,
 		shadows,
 		light_levels,
 		1.0,
+		0.0,
 		sss_depth,
 #ifdef CLOUD_SHADOWS
 		cloud_shadows,

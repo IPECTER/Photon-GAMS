@@ -609,12 +609,10 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						if (material_mask == 36u) { // 36
 							#ifdef HARDCODED_EMISSION
 							// Medium golden light
-							material.albedo = material.albedo * vec3(0.0) + float(material.albedo) * vec3(MEDIUM_GOLDEN_LIGHT_R, MEDIUM_GOLDEN_LIGHT_G, MEDIUM_GOLDEN_LIGHT_B);
-							material.emission  = 2.0 * sqr(albedo_sqrt) * linear_step(0.78, 0.85, hsl.z);
+							material.emission  = 0.85 * albedo_sqrt * linear_step(0.78, 0.85, hsl.z);
 
 							#if defined WORLD_END && defined END_COLORED_LIGHTING
-							material.albedo = material.albedo * vec3(0.0) + float(material.albedo) * vec3(0.70, 0.10, 1.00);
-							material.emission  = 2.0 * sqr(albedo_sqrt) * linear_step(0.78, 0.85, hsl.z);
+							material.emission  = 0.6 * sqr(vec3(0.70, 0.10, 1.0) * 3) * linear_step(0.78, 0.85, hsl.z);
 							#endif
 							light_levels.x *= 0.85;
 							#endif
@@ -652,12 +650,15 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						} else { // 39
 							#ifdef HARDCODED_EMISSION
 							// Lava
-							material.albedo = float(material.albedo) * vec3(LAVA_LIGHT_R, LAVA_LIGHT_G, LAVA_LIGHT_B);
-							material.emission = LAVA_EMISSION_I * (12 * albedo_sqrt * smoothstep(1.0, 0.6 ,hsl.y) * step(0.1, hsl.y) - 0.3 * albedo_sqrt * smoothstep(0.6, 1.0 ,hsl.y));
+							material.emission = LAVA_EMISSION_I * 4.0 * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y);
+
+							#if defined LAVA_EMISSION_RGB && !defined RENDERTYPE_ENTITY
+    						material.albedo = float(material.albedo) * vec3(LAVA_EMISSION_R, LAVA_EMISSION_G, LAVA_EMISSION_B);
+							#endif
 
 							#if defined WORLD_END && defined END_COLORED_LIGHTING
-							material.albedo = float(material.albedo) * vec3(0.70, 0.10, 1.00);
-							material.emission = LAVA_EMISSION_I * (12 * albedo_sqrt * smoothstep(1.0, 0.6 ,hsl.y) * step(0.1, hsl.y) - 0.3 * albedo_sqrt * smoothstep(0.6, 1.0 ,hsl.y));
+							material.emission = -1.0 * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y);
+							material.emission += 2.0 * float(material.albedo) * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y) * 0.6 * sqr(vec3(0.70, 0.10, 1.0) * 3);
 							#endif
 
 							#endif
@@ -670,13 +671,11 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						if (material_mask == 40u) { // 40
 							#ifdef HARDCODED_EMISSION
 							// Medium orange emissives
-							material.albedo = float(material.albedo) * vec3(MEDIUM_ORANGE_LIGHT_R, MEDIUM_ORANGE_LIGHT_G, MEDIUM_ORANGE_LIGHT_B);
-							//material.emission = 1.40 * sqr(albedo_srgb) * (0.1 + 0.9 * cube(hsl.z));
-							material.emission = 1.00 * sqr(albedo_srgb) * (0.9 * cube(hsl.z)) + sqr(albedo_sqrt) * smoothstep(0.80, 1.00, hsl.z);
+							material.emission = 0.60 * albedo_sqrt * (0.1 + 0.9 * cube(hsl.z));
 
 							#if defined WORLD_END && defined END_COLORED_LIGHTING
-							material.albedo = float(material.albedo) * vec3(0.70, 0.10, 1.00);
-							material.emission = 1.00 * sqr(albedo_srgb) * (0.9 * cube(hsl.z)) + sqr(albedo_sqrt) * smoothstep(0.80, 1.00, hsl.z);
+							material.emission -= 1.5 * albedo_sqrt * (0.1 + 0.9 * cube(hsl.z));
+							material.emission += 0.12 *sqr(sqr(vec3(0.70, 0.10, 1.0) * 3)) * linear_step(0.1, 0.9, hsl.z) * float(albedo_sqrt);
 							#endif
 							#endif
 							#ifdef HARDCODED_SPECULAR
@@ -738,7 +737,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						} else { // 45
 							#ifdef HARDCODED_EMISSION
 							// End portal frame
-							material.emission = 0.33 * material.albedo * isolate_hue(hsl, 120.0, 50.0);
+							material.emission = 0.45 * albedo_sqrt * isolate_hue(hsl, 120.0, 50.0) + 0.45 * albedo_sqrt * isolate_hue(hsl,50.0, 50.0) * step(0.8, hsl.y);
 							#endif
 							#ifdef HARDCODED_SPECULAR
 							float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);

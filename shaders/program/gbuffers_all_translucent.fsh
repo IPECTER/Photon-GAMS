@@ -41,6 +41,11 @@ flat in vec2 atlas_tile_offset;
 flat in vec2 atlas_tile_scale;
 #endif
 
+#if defined WORLD_OVERWORLD
+#include "/include/fog/overworld/parameters.glsl"
+flat in OverworldFogParameters fog_params;
+#endif
+
 // ------------
 //   Uniforms
 // ------------
@@ -140,10 +145,6 @@ uniform vec4 entityColor;
 	#undef SHADOW_COLOR
 #endif
 
-#ifdef SH_SKYLIGHT
-	#undef SH_SKYLIGHT
-#endif
-
 #if defined PROGRAM_GBUFFERS_TEXTURED || defined PROGRAM_GBUFFERS_PARTICLES_TRANSLUCENT
 	#define NO_NORMAL
 #endif
@@ -158,6 +159,7 @@ uniform vec4 entityColor;
 #include "/include/lighting/specular_lighting.glsl"
 #include "/include/misc/distant_horizons.glsl"
 #include "/include/misc/material.glsl"
+#include "/include/misc/material_masks.glsl"
 #include "/include/misc/purkinje_shift.glsl"
 #include "/include/misc/water_normal.glsl"
 #include "/include/utility/color.glsl"
@@ -239,7 +241,9 @@ Material get_water_material(
 			texture_highlight = 0;
 		#endif
 	#endif
-
+#if defined PROGRAM_GBUFFERS_ENTITIES_TRANSLUCENT
+ 		if (material_mask == 80u) base_color = vec4(1.0);
+ #endif
 	// Water absorption
 
 	#if defined (PHYSICS_MOD_OCEAN) && defined (PHYSICS_OCEAN)
@@ -393,8 +397,8 @@ void main() {
 	vec3 normal = tbn[2];
 	vec3 normal_tangent = vec3(0.0, 0.0, 1.0);
 
-	bool is_water         = material_mask == 1;
-	bool is_nether_portal = material_mask == 62;
+	bool is_water         = material_mask == MATERIAL_WATER;
+	bool is_nether_portal = material_mask == MATERIAL_NETHER_PORTAL;
 
 	vec2 adjusted_light_levels = light_levels;
 
@@ -412,20 +416,35 @@ void main() {
 		);
 
 	#ifdef WATER_WAVES
-		#ifdef DISTANT_HORIZONS
-			// Use same TBN matrix calculation for vanilla water as for DH water (wasteful)
-			mat3 tbn = get_tbn_matrix(tbn[2]);
-		#endif
-		vec3 world_pos = position_scene + cameraPosition;
-		vec2 coord = -(world_pos * tbn).xy;
-		bool flowing_water = abs(tbn[2].y) < 0.99;
-		vec2 flow_dir = flowing_water ? normalize(tbn[2].xz) : vec2(0.0);
-		#ifdef WATER_PARALLAX
+		if (abs(normal.y) > eps) {
+			vec3 flat_normal = tbn[2];
+			#ifdef DISTANT_HORIZONS
+			// Use hardcoded TBN matrix pointing upwards that is the same for DH water and regular water
+			mat3 tbn = mat3(
+			vec3(1.0, 0.0, 0.0),
+			vec3(0.0, 0.0, 1.0),
+			vec3(0.0, 1.0, 0.0)
+			);
+			if (normal.y < 0.0) {
+				tbn = -tbn;
+			}
+			#endif
+
+			vec3 world_pos = position_scene + cameraPosition;
+
+			vec2 coord = -(world_pos * tbn).xy;
+
+			bool flowing_water = abs(flat_normal.y) < 0.99;
+			vec2 flow_dir = flowing_water ? normalize(flat_normal.xz) : vec2(0.0);
+
+			#ifdef WATER_PARALLAX
 			vec3 direction_tangent = direction_world * tbn;
 			coord = get_water_parallax_coord(direction_tangent, coord, flow_dir, flowing_water);
-		#endif
-		normal_tangent = get_water_normal(world_pos, tbn[2], coord, flow_dir, light_levels.y, flowing_water);
-		normal = tbn * normal_tangent;
+			#endif
+
+			normal_tangent = get_water_normal(world_pos, flat_normal, coord, flow_dir, light_levels.y, flowing_water);
+			normal = tbn * normal_tangent;
+		}
 	#endif
 #endif
 
@@ -449,7 +468,7 @@ void main() {
 
 #if defined PROGRAM_GBUFFERS_ENTITIES_TRANSLUCENT
 		// Lightning (old versions)
-		if (material_mask == 102) fragment_color = vec4(1.0);
+		if (material_mask == MATERIAL_LIGHTNING_BOLT) fragment_color = vec4(1.0);
 
 		// Hit mob tint
 		fragment_color.rgb = mix(fragment_color.rgb, entityColor.rgb, entityColor.a);
@@ -457,7 +476,7 @@ void main() {
 
 		if (fragment_color.a < 0.1) discard;
 
-		material = material_from(fragment_color.rgb * fragment_color.a, material_mask, world_pos, tbn[2], adjusted_light_levels);
+		material = material_from(fragment_color.rgb, material_mask, world_pos, tbn[2], adjusted_light_levels);
 
 #if defined PROGRAM_GBUFFERS_LIGHTNING
 		// Lightning (since gbuffers_lightning)
@@ -476,7 +495,7 @@ void main() {
 		adjusted_light_levels *= mix(0.7, 1.0, material_ao);
 
 	#ifdef DIRECTIONAL_LIGHTMAPS
-		adjusted_light_levels *= get_directional_lightmaps(normal);
+		adjusted_light_levels *= get_directional_lightmaps(position_scene, normal);
 	#endif
 #endif
 
@@ -534,9 +553,11 @@ void main() {
 		position_scene,
 		normal,
 		tbn[2],
+		tbn[2],
 		shadows,
 		adjusted_light_levels,
 		1.0,
+		0.0,
 		sss_depth,
 #ifdef CLOUD_SHADOWS
 		cloud_shadows,
@@ -546,7 +567,7 @@ void main() {
 		NoV,
 		NoH,
 		LoV
-	);
+	) * sqr(fragment_color.a);
 
 	// Specular highlight
 
@@ -567,6 +588,7 @@ void main() {
 			new_tbn,
 			position_screen,
 			position_view,
+			world_pos,
 			normal,
 			tbn[2],
 			direction_world,
@@ -595,8 +617,6 @@ void main() {
 	} 
 #endif 
 
-	fragment_color = vec4(fragment_color.rgb / max(fragment_color.a, eps), fragment_color.a);
-
 	// Fog
 
 	vec4 fog = common_fog(length(position_scene), false);
@@ -614,4 +634,3 @@ void main() {
 	refraction_data.zw = split_2x8(normal_tangent.y * 0.5 + 0.5);
 #endif
 }
-
