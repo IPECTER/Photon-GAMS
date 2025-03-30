@@ -106,7 +106,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 	Material material;
 	material.albedo             = srgb_eotf_inv(albedo_srgb) * rec709_to_rec2020;
 	material.emission           = vec3(0.0);
-	material.f0                 = vec3(0.0);
+	material.f0                 = vec3(0.02);
 	material.f82                = vec3(0.0);
 	material.roughness          = 1.0;
 	material.sss_amount         = 0.0;
@@ -594,7 +594,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						} else { // 35
 							#ifdef HARDCODED_EMISSION
 							// Strong golden light
-							material.emission  = 0.85 * albedo_sqrt * linear_step(0.4, 0.6, 0.2 * hsl.y + 0.55 * hsl.z);
+							material.emission  = 0.85 * albedo_sqrt * hsl.z * linear_step(0.4, 0.6, 0.2 * hsl.y + 0.55 * hsl.z);
 							light_levels.x *= 0.85;
 							#endif
 							#ifdef HARDCODED_SPECULAR
@@ -650,7 +650,11 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						} else { // 39
 							#ifdef HARDCODED_EMISSION
 							// Lava
-							material.emission = 4.0 * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y);
+							material.emission = LAVA_EMISSION_I * 4.0 * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y);
+
+							#if defined LAVA_EMISSION_RGB && !defined RENDERTYPE_ENTITY
+    						material.albedo = float(material.albedo) * vec3(LAVA_EMISSION_R, LAVA_EMISSION_G, LAVA_EMISSION_B);
+							#endif
 
 							#if defined WORLD_END && defined END_COLORED_LIGHTING
 							material.emission = -1.0 * albedo_sqrt * (0.2 + 0.8 * isolate_hue(hsl, 30.0, 15.0)) * step(0.4, hsl.y);
@@ -733,7 +737,7 @@ Material material_from(vec3 albedo_srgb, uint material_mask, vec3 world_pos, vec
 						} else { // 45
 							#ifdef HARDCODED_EMISSION
 							// End portal frame
-							material.emission = 0.33 * material.albedo * isolate_hue(hsl, 120.0, 50.0);
+							material.emission = 0.45 * albedo_sqrt * isolate_hue(hsl, 120.0, 50.0) + 0.45 * albedo_sqrt * isolate_hue(hsl,50.0, 50.0) * step(0.8, hsl.y);
 							#endif
 							#ifdef HARDCODED_SPECULAR
 							float smoothness = 0.45 * smoothstep(0.01, 0.7, hsl.z);

@@ -14,16 +14,18 @@
 #include "/include/global.glsl"
 
 /* RENDERTARGETS: 8 */
-layout (location = 0) out float cloud_shadow_map;
+layout (location = 0) out vec2 cloud_shadow_map;
 
 in vec2 uv;
 
-flat in vec2 clouds_cumulus_coverage;
-flat in vec2 clouds_altocumulus_coverage;
-flat in vec2 clouds_cirrus_coverage;
-flat in float clouds_cumulus_congestus_amount;
-flat in float clouds_cumulonimbus_amount;
-flat in float clouds_stratus_amount;
+#ifndef IS_IRIS
+flat in vec3 sun_dir_fixed;
+flat in vec3 moon_dir_fixed;
+flat in vec3 light_dir_fixed;
+#endif
+
+#include "/include/sky/clouds/parameters.glsl"
+flat in CloudsParameters clouds_params;
 
 // ------------
 //   Uniforms
@@ -85,6 +87,12 @@ const vec3 sky_color  = vec3(0.0);
 uniform int dhRenderDistance;
 #endif
 
+#ifndef IS_IRIS
+#define sun_dir sun_dir_fixed
+#define moon_dir moon_dir_fixed
+#define light_dir light_dir_fixed
+#endif
+
 #define PROGRAM_PREPARE
 #include "/include/lighting/cloud_shadows.glsl"
 
@@ -92,7 +100,7 @@ void main() {
 #ifndef BLOCKY_CLOUDS
     cloud_shadow_map = render_cloud_shadow_map(uv);
 #else
-    cloud_shadow_map = 1.0;
+    cloud_shadow_map = vec2(1.0);
 #endif
 }
 

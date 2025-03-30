@@ -12,6 +12,10 @@
 #include "/include/utility/sampling.glsl"
 #include "/include/utility/space_conversion.glsl"
 
+#if defined WORLD_OVERWORLD
+#include "/include/fog/overworld/analytic.glsl"
+#endif
+
 // ----------------------
 //   Specular Highlight
 // ----------------------
@@ -110,7 +114,6 @@ vec3 get_specular_highlight(
 //   Specular Reflections
 // ------------------------
 
-#ifdef PROGRAM_COMPOSITE1
 vec3 sample_ggx_vndf(vec3 viewer_dir, vec2 alpha, vec2 hash) {
 /*
 	// from https://jcgt.org/published/0007/04/01/paper.pdf: "Sampling the GGX distribution of visible normals"
@@ -174,6 +177,7 @@ vec3 get_sky_reflection(vec3 ray_dir, float skylight) {
 vec3 trace_specular_ray(
 	vec3 screen_pos,
 	vec3 view_pos,
+	vec3 world_pos,
 	vec3 ray_dir,
 	float dither,
 	float skylight,
@@ -186,16 +190,6 @@ vec3 trace_specular_ray(
 #ifdef ENVIRONMENT_REFLECTIONS
 	vec3 hit_pos;
 	bool hit = raymarch_depth_buffer(
-	#ifdef DISTANT_HORIZONS
-		combined_depth_buffer,
-	#else
-		#ifdef SSR_PREVIOUS_FRAME
-		depthtex0,
-		#else
-		depthtex1,
-		#endif
-	#endif
-		combined_projection_matrix,
 		screen_pos,
 		view_pos,
 		view_dir,
@@ -220,22 +214,27 @@ vec3 trace_specular_ray(
 		float border_attenuation = (hit_pos.x * hit_pos.y - hit_pos.x) * (hit_pos.x * hit_pos.y - hit_pos.y);
 		      border_attenuation = dampen(linear_step(0.0, border_attenuation_factor, border_attenuation));
 
-#if defined SSR_PREVIOUS_FRAME && !defined DISTANT_HORIZONS
-	#ifdef VL
-		// Un-apply volumetric fog scattering using fog from the current frame
-		vec2 fog_uv = clamp(hit_pos.xy * VL_RENDER_SCALE, vec2(0.0), floor(view_res * VL_RENDER_SCALE - 1.0) * view_pixel_size);
-		vec3 fog_scattering = texture(colortex6, fog_uv).rgb;
-	#else
-		vec3 fog_scattering = vec3(0.0);
-	#endif
+		vec3 hit_pos_view = screen_to_view_space(SSRT_PROJECTION_MATRIX_INVERSE, hit_pos, false);
+		vec3 hit_pos_scene = view_to_scene_space(hit_pos_view);
+		
+		vec2 hit_uv_prev = reproject_scene_space(hit_pos_scene, false, false).xy;
+		if (clamp01(hit_uv_prev) != hit_uv_prev) return sky_reflection;
 
-		vec3 hit_pos_prev = reproject(hit_pos);
-		if (clamp01(hit_pos_prev) != hit_pos_prev) return sky_reflection;
+		vec3 reflection = textureLod(colortex5, hit_uv_prev.xy, mip_level).rgb;
+		
+		vec3 fog_scattering_previous = texture(colortex7, hit_uv_prev.xy).rgb;
+		
+#if defined WORLD_OVERWORLD
+		// Apply analytic fog in reflection
+		mat2x3 analytic_fog = air_fog_analytic(
+			world_pos,
+			hit_pos_scene + cameraPosition,
+			false,
+			eye_skylight
+		);
 
-		vec3 reflection = textureLod(colortex5, hit_pos_prev.xy, mip_level).rgb;
-		     reflection = max0(reflection - fog_scattering);
-#else
-		vec3 reflection = textureLod(colortex0, hit_pos.xy * taau_render_scale, mip_level).rgb;
+		reflection = max0(reflection - fog_scattering_previous);
+		reflection = reflection * analytic_fog[1] + analytic_fog[0];
 #endif
 
 		return mix(sky_reflection, reflection, border_attenuation);
@@ -249,6 +248,7 @@ vec3 get_specular_reflections(
 	mat3 tbn_matrix,
 	vec3 screen_pos,
 	vec3 view_pos,
+	vec3 world_pos,
 	vec3 normal,
 	vec3 flat_normal,
 	vec3 world_dir,
@@ -258,18 +258,17 @@ vec3 get_specular_reflections(
 ) {
 	vec3 albedo_tint = material.is_hardcoded_metal ? material.albedo : vec3(1.0);
 
-	float alpha_squared = sqr(material.roughness);
-
+	float alpha_squared = material.roughness * material.roughness;
 	float dither = r1(frameCounter, texelFetch(noisetex, ivec2(gl_FragCoord.xy) & 511, 0).b);
 
 #ifdef DISTANT_HORIZONS
 	// Convert screen depth to combined depth
-	screen_pos = view_to_screen_space(combined_projection_matrix, view_pos, true);
+	screen_pos = view_to_screen_space(SSRT_PROJECTION_MATRIX, view_pos, true);
 #endif
 
 #if defined SSR_ROUGHNESS_SUPPORT && defined SPECULAR_MAPPING
 	if (!is_water) { // Rough reflection
-	 	float mip_level = 8.0 * dampen(material.roughness);
+	 	float mip_level = min(8.0 * (1.0 - pow8(1.0 - material.roughness)), 5.0);
 
 		vec3 reflection = vec3(0.0);
 
@@ -278,13 +277,13 @@ vec3 get_specular_reflections(
 			hash.x = interleaved_gradient_noise(gl_FragCoord.xy,                    frameCounter * SSR_RAY_COUNT + i);
 			hash.y = interleaved_gradient_noise(gl_FragCoord.xy + vec2(97.0, 23.0), frameCounter * SSR_RAY_COUNT + i);
 
-			vec3 microfacet_normal = tbn_matrix * sample_ggx_vndf(-tangent_dir, vec2(alpha_squared), hash);
+			vec3 microfacet_normal = tbn_matrix * sample_ggx_vndf(-tangent_dir, vec2(material.roughness), hash);
 			vec3 ray_dir = reflect(world_dir, microfacet_normal);
 
 			float NoL = dot(normal, ray_dir);
 			if (NoL < eps) continue;
 
-			vec3 radiance = trace_specular_ray(screen_pos, view_pos, ray_dir, dither, skylight, SSR_INTERSECTION_STEPS_ROUGH, SSR_REFINEMENT_STEPS, int(mip_level));
+			vec3 radiance = trace_specular_ray(screen_pos, view_pos, world_pos, ray_dir, dither, skylight, SSR_INTERSECTION_STEPS_ROUGH, SSR_REFINEMENT_STEPS, int(mip_level));
 
 			float NoV = max(1e-2, dot(flat_normal, -world_dir));
 			float MoV = max(1e-2, dot(microfacet_normal, -world_dir));
@@ -337,13 +336,12 @@ vec3 get_specular_reflections(
 	float v1 = v1_smith_ggx(NoV, alpha_squared);
 	float v2 = v2_smith_ggx(NoL, NoV, alpha_squared);
 
-	vec3 reflection  = trace_specular_ray(screen_pos, view_pos, ray_dir, dither, skylight, SSR_INTERSECTION_STEPS_SMOOTH, SSR_REFINEMENT_STEPS, 0);
+	vec3 reflection  = trace_specular_ray(screen_pos, view_pos, world_pos, ray_dir, dither, skylight, SSR_INTERSECTION_STEPS_SMOOTH, SSR_REFINEMENT_STEPS, 0);
 	     reflection *= albedo_tint * fresnel;
 
 	if (any(isnan(reflection))) reflection = vec3(0.0); // don't reflect NaNs
 
 	return reflection * material.ssr_multiplier;
 }
-#endif // PROGRAM_COMPOSITE1
 
 #endif // INCLUDE_LIGHTING_SPECULAR_LIGHTING

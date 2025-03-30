@@ -1,16 +1,13 @@
-#ifndef INCLUDE_SKY_AURORA
+#if !defined INCLUDE_SKY_AURORA
 #define INCLUDE_SKY_AURORA
-
 
 #include "/include/utility/color.glsl"
 #include "/include/utility/fast_math.glsl"
 #include "/include/utility/geometry.glsl"
 #include "/include/utility/phase_functions.glsl"
 
-
 vec3 aurora_color(vec3 pos, float altitude_fraction) {
-	return mix(aurora_colors[0], aurora_colors[1], clamp01(dampen(altitude_fraction)));
-}
+	return mix(aurora_colors[0], aurora_colors[1], clamp01(dampen(altitude_fraction))); }
 
 #if AURORA_TYPE == AURORA_PHOTON
 
@@ -75,8 +72,6 @@ vec3 draw_aurora(vec3 ray_dir, float dither) {
 
 	return (0.001 * mix(AURORA_BRIGHTNESS, AURORA_BRIGHTNESS_SNOW, biome_may_snow)) * emission * aurora_amount;
 }
-
-
 
 #elif AURORA_TYPE == AURORA_NIMITZ
 

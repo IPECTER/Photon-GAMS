@@ -10,12 +10,13 @@
 	#undef WATER_DISPLACEMENT
 #endif
 
+#include "/include/misc/material_masks.glsl"
+
 #ifdef IS_IRIS
 uniform vec3 eyePosition;
 #else
 #define eyePosition cameraPosition
 #endif
-
 
 #if defined WATER_DISPLACEMENT
 float gerstner_wave(vec2 coord, vec2 wave_dir, float t, float noise, float wavelength) {
@@ -38,7 +39,7 @@ float get_water_displacement(vec3 world_pos, float skylight) {
 	const vec2  wave_dir       = vec2(cos(wave_angle), sin(wave_angle));
 
 	float wave = gerstner_wave(world_pos.xy * wave_frequency, wave_dir, frameTimeCounter * wave_speed, 0.0, wavelength);
-	      wave = (wave * 0.05 - 0.025) * (skylight * 0.9 + 0.1);
+		  wave = (wave * 0.05 - 0.025) * (skylight * 0.9 + 0.1);
 
 	return wave;
 }
@@ -52,7 +53,7 @@ vec3 get_wind_displacement(vec3 world_pos, float wind_speed, float wind_strength
 	float t = wind_speed * frameTimeCounter;
 
 	float gust_amount  = texture(noisetex, 0.05 * (world_pos.xz + wind_dir * t)).y;
-	      gust_amount *= gust_amount;
+		  gust_amount *= gust_amount;
 
 	vec3 gust = vec3(wind_dir * gust_amount, 0.1 * gust_amount).xzy;
 
@@ -69,34 +70,64 @@ vec3 animate_vertex(vec3 world_pos, bool is_top_vertex, float skylight, uint mat
 	float wind_speed = 0.3;
 	float wind_strength = sqr(skylight) * (0.25 + 0.66 * rainStrength);
 
-	// Displace plants close to the player
+	// Displace plants/leaves close to the player
+#ifdef PLAYER_DISPLACEMENT
 	vec3 to_player = eyePosition - world_pos;
 	vec3 player_displacement = vec3(
 		-6.0 * to_player.xz * exp2(-length(to_player * vec3(6.0, 2.0, 6.0))),
 		0.0
 	).xzy;
+#else
+	vec3 player_displacement = vec3(0.0, 0.0, 0.0);
+#endif
 
 	switch (material_mask) {
 #ifdef WATER_DISPLACEMENT
-	case 1:
+	case MATERIAL_WATER:
 		world_pos.y += get_water_displacement(world_pos, skylight);
 		return world_pos;
 #endif
 
 #ifdef WAVING_PLANTS
-	case 2:
-		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement) * float(is_top_vertex);
+	case MATERIAL_SMALL_PLANTS:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
 
-	case 3:
-		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement) * float(is_top_vertex);
+	case MATERIAL_TALL_PLANTS_LOWER:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
 
-	case 4:
-		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, is_top_vertex) + player_displacement);
+	case MATERIAL_TALL_PLANTS_UPPER:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, is_top_vertex) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH);
+
+	//Glowing Flowers
+	case 192:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 65:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 66:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 69:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 70:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 71:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 72:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 73:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 74:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 75:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 76:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
+	case 77:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength, false) + player_displacement * PLAYER_DISPLACEMENT_PLANTS_STRENGTH) * float(is_top_vertex);
 #endif
 
 #ifdef WAVING_LEAVES
-	case 5:
-		return world_pos + get_wind_displacement(world_pos, wind_speed, wind_strength * 0.5, false);
+	case MATERIAL_LEAVES:
+		return world_pos + (get_wind_displacement(world_pos, wind_speed, wind_strength * 0.5, false) + player_displacement * PLAYER_DISPLACEMENT_LEAVES_STRENGTH);
 #endif
 
 	default:
@@ -104,16 +135,17 @@ vec3 animate_vertex(vec3 world_pos, bool is_top_vertex, float skylight, uint mat
 	}
 }
 
-#ifdef WORLD_END
+//Optifine #if fix, added boolean settings, removed 0.0 as SIZE sliders values to avoid comparing float
+#if defined (WORLD_END) && defined (END_CURVATURE)
 	#define CURVATURE_SIZE END_CURVATURE_SIZE
-#elif defined(WORLD_NETHER)
+#elif defined(WORLD_NETHER) && defined (NETHER_CURVATURE)
 	#define CURVATURE_SIZE NETHER_CURVATURE_SIZE
-#else
+#elif defined(WORLD_OVERWORLD) && defined (OVERWORLD_CURVATURE)
 	#define CURVATURE_SIZE OVERWORLD_CURVATURE_SIZE
 #endif
 
 vec3 world_curvature(vec3 scene_pos) {
-#if CURVATURE_SIZE != 0.0 && defined(WORLD_CURVATURE)
+	#if defined (WORLD_CURVATURE) && defined (CURVATURE_SIZE)
 	//scene_pos += cameraPosition;
 	#if CURVATURE_MODE == CURVATURE_MODE_SQUARED_DISTANCE
 

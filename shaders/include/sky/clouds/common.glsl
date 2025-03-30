@@ -2,7 +2,7 @@
 #define INCLUDE_SKY_CLOUDS_COMMON
 
 #include "/include/sky/atmosphere.glsl"
-
+#include "/include/sky/clouds/constants.glsl"
 #include "/include/utility/color.glsl"
 #include "/include/utility/fast_math.glsl"
 #include "/include/utility/geometry.glsl"
@@ -12,19 +12,50 @@
 
 uniform float day_factor;
 
+// ----
+
 struct CloudsResult {
-	vec3 scattering;
+	vec4 scattering; // w = ambient scattering, for lightning flashes
 	float transmittance;
 	float apparent_distance;
 };
 
 const CloudsResult clouds_not_hit = CloudsResult(
-	vec3(0.0),
+	vec4(0.0),
 	1.0,
-	1e6
+	1e5
 );
 
 // ----
+
+// from https://iquilezles.org/articles/gradientnoise/
+vec2 perlin_gradient(vec2 coord) {
+	vec2 i = floor(coord);
+	vec2 f = fract(coord);
+
+	vec2 u  = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+	vec2 du = 30.0 * f * f * ( f *( f - 2.0) + 1.0);
+
+	vec2 g0 = hash2(i + vec2(0.0, 0.0));
+	vec2 g1 = hash2(i + vec2(1.0, 0.0));
+	vec2 g2 = hash2(i + vec2(0.0, 1.0));
+	vec2 g3 = hash2(i + vec2(1.0, 1.0));
+
+	float v0 = dot(g0, f - vec2(0.0, 0.0));
+	float v1 = dot(g1, f - vec2(1.0, 0.0));
+	float v2 = dot(g2, f - vec2(0.0, 1.0));
+	float v3 = dot(g3, f - vec2(1.0, 1.0));
+
+	return vec2(
+	g0 + u.x * (g1 - g0) + u.y * (g2 - g0) + u.x * u.y * (g0 - g1 - g2 + g3) + // d/dx
+	du * (u.yx * (v0 - v1 - v2 + v3) + vec2(v1, v2) - v0)                      // d/dy
+	);
+}
+
+vec2 curl2D(vec2 coord) {
+	vec2 gradient = perlin_gradient(coord);
+	return vec2(gradient.y, -gradient.x);
+}
 
 float clouds_phase_single(float cos_theta) { // Single scattering phase function
 	float forwards_a = klein_nishina_phase(cos_theta, 2600.0); // this gives a nice glow very close to the sun
@@ -59,7 +90,7 @@ vec3 clouds_aerial_perspective(
 
 #if CLOUDS_AERIAL_PERSPECTIVE_BOOST != 0
 	ray_end = mix(ray_origin, ray_end, float(1 << CLOUDS_AERIAL_PERSPECTIVE_BOOST));
-#endif
+#endif // CLOUDS_AERIAL_PERSPECTIVE_BOOST
 
 	if (length_squared(ray_origin) < length_squared(ray_end)) {
 		vec3 trans_0 = atmosphere_transmittance(ray_origin, ray_dir);
@@ -85,8 +116,8 @@ CloudsResult blend_layers(CloudsResult old, CloudsResult new, uint iter) {
 
 	bool new_in_front = new.apparent_distance < old.apparent_distance;
 
-	vec3 scattering_behind       = new_in_front ? old.scattering : new.scattering;
-	vec3 scattering_in_front     = new_in_front ? new.scattering : old.scattering;
+	vec4 scattering_behind       = new_in_front ? old.scattering : new.scattering;
+	vec4 scattering_in_front     = new_in_front ? new.scattering : old.scattering;
 	float transmittance_in_front = new_in_front ? new.transmittance : old.transmittance;
 
 	return CloudsResult(
@@ -96,4 +127,4 @@ CloudsResult blend_layers(CloudsResult old, CloudsResult new, uint iter) {
 	);
 }
 
-#endif
+#endif // INCLUDE_SKY_CLOUDS_COMMON

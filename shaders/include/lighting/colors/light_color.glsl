@@ -45,6 +45,12 @@ float get_moon_exposure() {
 	return base_scale * moon_phase_brightness;
 }
 
+float get_base_moon_exposure() {
+	const float base_scale = 0.66;
+
+	return base_scale * moon_phase_brightness;
+}
+
 vec3 get_moon_tint() {
 	const vec3 base_tint = from_srgb(vec3(MOON_R, MOON_G, MOON_B));
 
@@ -57,7 +63,6 @@ vec3 get_light_color() {
 	     light_color *= mix(get_sun_exposure() * get_sun_tint(), get_moon_exposure() * get_moon_tint(), step(0.5, sunAngle));
 	     light_color *= clamp01(rcp(0.02) * light_dir.y); // fade away during day/night transition
 		 light_color *= 1.0 - 0.25 * pulse(abs(light_dir.y), 0.15, 0.11);
-		 light_color *= 1.0 - rainStrength;
 
 	return light_color;
 }

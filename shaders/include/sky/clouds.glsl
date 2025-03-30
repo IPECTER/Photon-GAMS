@@ -7,8 +7,21 @@
 #include "clouds/cumulonimbus.glsl"
 #include "clouds/cirrus.glsl"
 #include "clouds/noctilucent.glsl"
+#include "clouds/towering_cumulus.glsl"
+#include "clouds/thunderhead.glsl"
 
-#if !defined CLOUDS_CUMULUS && !defined CLOUDS_CUMULUS_CONGESTUS && !defined CLOUDS_CUMULONIMBUS && !defined CLOUDS_ALTOCUMULUS && !defined CLOUDS_CIRRUS
+bool clouds_early_exit(
+	CloudsResult result,
+	float r,
+	float layer_radius
+) {
+	bool has_congestus = clouds_params.cumulus_congestus_blend > eps;
+	
+	return result.transmittance < 1e-3 && r < layer_radius
+		&& (result.apparent_distance < clouds_cumulus_congestus_distance || !has_congestus);
+}
+
+#if !defined CLOUDS_CUMULUS && !defined CLOUDS_CUMULUS_CONGESTUS && !defined CLOUDS_CUMULONIMBUS && !defined CLOUDS_ALTOCUMULUS && !defined CLOUDS_CIRRUS && !defined CLOUDS_TOWERING_CUMULUS && !defined CLOUDS_THUNDERHEAD
 CloudsResult draw_clouds(
 	vec3 air_viewer_pos,
 	vec3 ray_dir,
@@ -33,7 +46,13 @@ const uint defined_clouds =
 	8u |
 #endif
 #ifdef CLOUDS_CIRRUS
-	16u
+	16u |
+#endif
+#ifdef CLOUDS_TOWERING_CUMULUS
+	32u |
+#endif
+#ifdef CLOUDS_THUNDERHEAD
+	64u
 #else
 	0u
 #endif
@@ -44,7 +63,9 @@ const uint cloud_layers = max(
     ((defined_clouds >> 1u) & 1u) +
     ((defined_clouds >> 2u) & 1u) +
     ((defined_clouds >> 3u) & 1u) +
-    ((defined_clouds >> 4u) & 1u), 1u
+    ((defined_clouds >> 4u) & 1u) +
+    ((defined_clouds >> 5u) & 1u) +
+    ((defined_clouds >> 6u) & 1u), 1u
 );
 
 // Insertion sort from https://github.com/OpenGLInsights/OpenGLInsightsCode/blob/master/Chapter%2020%20Efficient%20Layered%20Fragment%20Buffer%20Techniques/sorting.glsl
@@ -84,7 +105,6 @@ CloudsResult draw_clouds(
 	float distance_to_terrain,
 	float dither
 ) {
-
 	CloudsResult result = clouds_not_hit;
 	if (defined_clouds == 0u) return result;
 	float r = length(air_viewer_pos);
@@ -92,72 +112,127 @@ CloudsResult draw_clouds(
 	int ct_index = 0;
 	vec2 cloud_types[cloud_layers];
 
-	#ifdef CLOUDS_CUMULUS_CONGESTUS
-		cloud_types[ct_index++] = vec2(0., abs(max0(clouds_cumulus_congestus_radius) - r));
-	#endif
-	#ifdef CLOUDS_CUMULUS
-		cloud_types[ct_index++] = vec2(1., abs(clouds_cumulus_radius - r));
-	#endif
-	#ifdef CLOUDS_CUMULONIMBUS
-		cloud_types[ct_index++] = vec2(2., mix(abs(clouds_cumulonimbus_radius - r), 0.0, rainStrength));
-	#endif
-	#ifdef CLOUDS_ALTOCUMULUS
-		cloud_types[ct_index++] = vec2(3., abs(clouds_altocumulus_radius - r));
-	#endif
-	#ifdef CLOUDS_CIRRUS
-		cloud_types[ct_index++] = vec2(4., abs(clouds_cirrus_radius - r));
-	#endif
+#ifdef CLOUDS_CUMULUS_CONGESTUS
+	cloud_types[ct_index++] = vec2(0., abs(max0(clouds_cumulus_congestus_radius) - r));
+#endif // CLOUDS_CUMULUS_CONGESTUS
+
+#ifdef CLOUDS_CUMULUS
+	cloud_types[ct_index++] = vec2(1., abs(clouds_cumulus_radius - r));
+#endif // CLOUDS_CUMULUS
+
+#ifdef CLOUDS_CUMULONIMBUS
+	cloud_types[ct_index++] = vec2(2., mix(abs(clouds_cumulonimbus_radius - r), 0.0, rainStrength));
+#endif // CLOUDS_CUMULONIMBUS
+
+#ifdef CLOUDS_CIRRUS
+	// Force cirrus clouds to always be rendered first (behind other clouds) by setting a very large distance
+	cloud_types[ct_index++] = vec2(4., 1e6);
+#endif // CLOUDS_CIRRUS
 
 	cloud_types = sort_clouds(cloud_types);
 
 	for(uint i = 0; i < cloud_types.length(); ++i) {
-
 		int cloud_type = int(cloud_types[i].x + 0.5);
 		switch (cloud_type) {
 #ifdef CLOUDS_CUMULUS_CONGESTUS
 		case 0:
-			if(clouds_cumulus_congestus_amount >= 1e-3) {
-				result = blend_layers(result, draw_cumulus_congestus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither), i);
+			if((clouds_params.cumulus_congestus_blend > eps) && (clouds_params.cumulus_congestus_blend >= 1e-3)) {
+				CloudsResult result_cu_con = draw_cumulus_congestus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+
+				// fade existing clouds into congestus
+				float distance_fade = mix(
+					1.0,
+					result_cu_con.transmittance,
+					linear_step(
+						0.75,
+						1.0,
+						result.apparent_distance * rcp(clouds_cumulus_congestus_distance)
+					)
+				);
+				result.scattering *= distance_fade;
+				result.transmittance += (1.0 - result.transmittance) * (1.0 - distance_fade);
+				result.apparent_distance = mix(result_cu_con.apparent_distance, result.apparent_distance, distance_fade);
+
+				result = blend_layers(result, result_cu_con, i);
+				if (result.transmittance < 1e-3) return result;
 			}
 			break;
-#endif
+#endif // CLOUDS_CUMULUS_CONGESTUS
+
 #ifdef CLOUDS_CUMULUS
 		case 1:
-			if(max(clouds_cumulus_coverage.x, clouds_cumulus_coverage.y) >= 1e-3) {
-				result = blend_layers(result, draw_cumulus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither), i);
+			if(max(clouds_params.l0_coverage.x, clouds_params.l0_coverage.y) >= 1e-3) {
+				CloudsResult cumulus_result = draw_cumulus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+				if (clouds_early_exit(result, r, clouds_cumulus_radius)) {
+					result = blend_layers(result, cumulus_result, i);
+					return result;
+				}
+
+				// Add altocumulus within cumulus function if enabled
+				#ifdef CLOUDS_ALTOCUMULUS
+					if(max(clouds_params.l1_coverage.x, clouds_params.l1_coverage.y) >= 1e-3) {
+						CloudsResult alto_result = draw_altocumulus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+						cumulus_result = blend_layers(cumulus_result, alto_result, i);
+						if (clouds_early_exit(result, r, clouds_altocumulus_radius)) {
+							result = blend_layers(result, cumulus_result, i);
+							return result;
+						}
+					}
+				#endif // CLOUDS_ALTOCUMULUS
+
+				// Add towering cumulus within cumulus function if enabled
+				#ifdef CLOUDS_TOWERING_CUMULUS
+					if(max(clouds_towering_cumulus_coverage.x, clouds_towering_cumulus_coverage.y) >= 1e-3) {
+						CloudsResult towering_result = draw_towering_cumulus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+						cumulus_result = blend_layers(cumulus_result, towering_result, i);
+					}
+				#endif // CLOUDS_TOWERING_CUMULUS
+
+				// Add thunderhead within cumulus function if enabled
+				#ifdef CLOUDS_THUNDERHEAD
+					if(max(clouds_thunderhead_coverage.x, clouds_thunderhead_coverage.y) >= 1e-3) {
+						CloudsResult thunderhead_result = draw_thunderhead_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+						cumulus_result = blend_layers(cumulus_result, thunderhead_result, i);
+					}
+				#endif // CLOUDS_THUNDERHEAD
+
+				result = blend_layers(result, cumulus_result, i);
+				if (result.transmittance < 1e-3) return result;
 			}
 			break;
-#endif
+#endif // CLOUDS_CUMULUS
+
 #ifdef CLOUDS_CUMULONIMBUS
 		case 2:
-			if(clouds_cumulonimbus_amount >= 1e-3) {
-				result = blend_layers(result, draw_cumulonimbus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither), i);
+			if(clouds_params.cumulonimbus_amount >= 1e-3) {
+				CloudsResult result_cn = draw_cumulonimbus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+				result = blend_layers(result, result_cn, i);
+				if (result.transmittance < 1e-3) return result;
 			}
 			break;
-#endif
-#ifdef CLOUDS_ALTOCUMULUS
-		case 3:
-			if(max(clouds_altocumulus_coverage.x, clouds_altocumulus_coverage.y) >= 1e-3) {
-				result = blend_layers(result, draw_altocumulus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither), i);
-			}
-			break;
-#endif
+#endif // CLOUDS_CUMULONIMBUS
+
 #ifdef CLOUDS_CIRRUS
 		case 4:
-			if(max(clouds_cirrus_coverage.x, clouds_cirrus_coverage.y) >= 1e-3) {
-				result = blend_layers(result, draw_cirrus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither), i);
+			if(max(clouds_params.cirrus_amount, clouds_params.cirrocumulus_amount) >= 1e-3) {	
+				CloudsResult result_ci = draw_cirrus_clouds(air_viewer_pos, ray_dir, clear_sky, distance_to_terrain, dither);
+				result = blend_layers(result, result_ci, i);
+				if (result.transmittance < 1e-3) return result;
 			}
 			break;
-#endif
+#endif // CLOUDS_CIRRUS
+
 		default: break;
+
 		}
 
-		if (result.transmittance < 1e-3 /*&& (cloud_type != 0 && cloud_type != 2)*/) return result;
+		if (result.transmittance < 1e-3) return result;
 	}
-	
-	vec4 noctilucent = draw_noctilucent_clouds(air_viewer_pos, ray_dir, clear_sky, dither);
-	result.scattering += noctilucent.xyz * result.transmittance;
-	result.transmittance *= noctilucent.w;
+#ifdef CLOUDS_NOCTILUCENT
+	vec4 result_nlc = draw_noctilucent_clouds(air_viewer_pos, ray_dir, clear_sky);
+	result.scattering.rgb += result_nlc.xyz * result.transmittance;
+	result.transmittance *= result_nlc.w;
+#endif // CLOUDS_NOCTILUCENT
 	
 	return result;
 }
